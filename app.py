@@ -596,7 +596,7 @@ def manual_update():
 
 # Automation background task
 def auto_update_content():
-    """Background task to update content at scheduled times (6AM and 11PM)"""
+    """Background task to update content every 5 hours"""
     import schedule
 
     def run_update():
@@ -610,12 +610,11 @@ def auto_update_content():
         except Exception as e:
             print(f"[AUTO] Error in auto-update: {e}")
 
-    # Schedule updates at 6AM and 11PM daily
-    schedule.every().day.at("06:00").do(run_update)
-    schedule.every().day.at("23:00").do(run_update)
+    # Schedule updates every 5 hours
+    schedule.every(5).hours.do(run_update)
 
     print("[AUTO] Content auto-update service started")
-    print("[AUTO] Scheduled updates: Daily at 6:00 AM and 11:00 PM")
+    print("[AUTO] Scheduled updates: Every 5 hours")
 
     # Run once immediately on startup
     print("[AUTO] Running initial content update...")
