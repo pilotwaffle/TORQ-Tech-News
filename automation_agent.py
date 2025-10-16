@@ -20,7 +20,10 @@ class ContentAgent:
     Intelligent agent that fetches real content and populates the landing page
     """
 
-    def __init__(self, landing_page_dir: str = r"E:\sloan-review-landing"):
+    def __init__(self, landing_page_dir: str = None):
+        # Auto-detect directory (works on both local and Railway)
+        if landing_page_dir is None:
+            landing_page_dir = os.path.dirname(os.path.abspath(__file__))
         self.landing_page_dir = Path(landing_page_dir)
         self.data_cache = self.landing_page_dir / "data_cache.json"
         self.html_file = self.landing_page_dir / "index.html"

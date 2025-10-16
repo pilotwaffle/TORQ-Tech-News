@@ -328,11 +328,40 @@ def serve_data_cache():
 
 @app.route('/article/<slug>')
 def article_detail(slug):
-    """Full article page"""
+    """Full article page - redirects to external MIT Sloan articles or generates content"""
     session_id = track_visitor(f'/article/{slug}')
 
     # Clean up the incoming slug
     slug = slug.strip('-')
+
+    # Load data cache to check for external links
+    try:
+        with open(DATA_CACHE_PATH, 'r') as f:
+            data = json.load(f)
+            articles = data.get('articles', [])
+            featured = data.get('featured', {})
+    except:
+        articles = []
+        featured = {}
+
+    # Check featured article first
+    if featured and normalize_slug(featured.get('title', '')) == slug:
+        cached_article = featured
+    else:
+        # Find matching article in regular articles using normalized slug
+        cached_article = next((a for a in articles if normalize_slug(a['title']) == slug), None)
+
+    # If still not found, try fuzzy matching
+    if not cached_article:
+        if featured and normalize_slug(featured.get('title', '')).startswith(slug[:20]):
+            cached_article = featured
+        else:
+            cached_article = next((a for a in articles if normalize_slug(a['title']).startswith(slug[:20])), None)
+
+    # If article has external link, redirect to it
+    if cached_article and cached_article.get('link') and cached_article['link'] not in ['#', '']:
+        from flask import redirect
+        return redirect(cached_article['link'])
 
     # Get article from database or generate it
     conn = sqlite3.connect(DB_PATH)
@@ -342,25 +371,6 @@ def article_detail(slug):
 
     if not article:
         # Generate new article
-        with open(DATA_CACHE_PATH, 'r') as f:
-            data = json.load(f)
-            articles = data.get('articles', [])
-            featured = data.get('featured', {})
-
-        # Check featured article first
-        if featured and normalize_slug(featured.get('title', '')) == slug:
-            cached_article = featured
-        else:
-            # Find matching article in regular articles using normalized slug
-            cached_article = next((a for a in articles if normalize_slug(a['title']) == slug), None)
-
-        # If still not found, try fuzzy matching
-        if not cached_article:
-            if featured and normalize_slug(featured.get('title', '')).startswith(slug[:20]):
-                cached_article = featured
-            else:
-                cached_article = next((a for a in articles if normalize_slug(a['title']).startswith(slug[:20])), None)
-
         if cached_article:
             full_content = ContentGenerator.generate_full_article(
                 cached_article['title'],
