@@ -497,6 +497,50 @@ def admin_dashboard():
     """Admin dashboard"""
     return send_from_directory('.', 'admin_dashboard.html')
 
+@app.route('/api/cron/update-content')
+def cron_update_content():
+    """Vercel Cron Job endpoint for automated content updates"""
+    try:
+        print("[CRON] Vercel Cron Job triggered")
+        import automation_agent
+        agent = automation_agent.ContentAgent()
+        result = agent.run()
+
+        return jsonify({
+            "status": "success",
+            "message": "Content updated successfully",
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        print(f"[CRON ERROR] {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/manual-update')
+def manual_update():
+    """Manual trigger for content update"""
+    try:
+        print("[MANUAL] Manual update triggered")
+        import automation_agent
+        agent = automation_agent.ContentAgent()
+        result = agent.run()
+
+        return jsonify({
+            "status": "success",
+            "message": "Content updated successfully",
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        print(f"[MANUAL ERROR] {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
 # Automation background task
 def auto_update_content():
     """Background task to update content at scheduled times (6AM and 11PM)"""

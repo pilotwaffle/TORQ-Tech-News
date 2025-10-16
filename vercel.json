@@ -14,5 +14,11 @@
   ],
   "env": {
     "PYTHON_VERSION": "3.11"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/update-content",
+      "schedule": "0 6,23 * * *"
+    }
+  ]
 }
