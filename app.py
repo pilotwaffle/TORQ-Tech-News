@@ -19,7 +19,10 @@ app = Flask(__name__,
            template_folder='.')
 
 # Database setup
-DB_PATH = Path("E:/sloan-review-landing/analytics.db")
+# Use relative path for cross-platform compatibility
+import os
+DB_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(DB_DIR, "analytics.db")
 
 def init_db():
     """Initialize database for analytics and content"""
