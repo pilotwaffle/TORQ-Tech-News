@@ -23,6 +23,7 @@ app = Flask(__name__,
 import os
 DB_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(DB_DIR, "analytics.db")
+DATA_CACHE_PATH = os.path.join(DB_DIR, "data_cache.json")
 
 def init_db():
     """Initialize database for analytics and content"""
@@ -69,8 +70,57 @@ def init_db():
     conn.close()
     print("[DB] Database initialized successfully")
 
-# Initialize database on startup
+def init_data_cache():
+    """Initialize data cache file if it doesn't exist"""
+    if not os.path.exists(DATA_CACHE_PATH):
+        print("[CACHE] data_cache.json not found, creating default cache...")
+        default_data = {
+            "featured": {
+                "title": "The Future of Digital Transformation in Enterprise",
+                "excerpt": "How leading organizations are leveraging AI and automation to stay competitive",
+                "category": "Digital Transformation",
+                "author": "Dr. Sarah Chen",
+                "author_title": "Professor of Digital Strategy",
+                "date": "December 15, 2024",
+                "reading_time": 8,
+                "image": ""
+            },
+            "articles": [
+                {
+                    "title": "AI Strategy: Building Competitive Advantage",
+                    "excerpt": "Strategic frameworks for AI implementation",
+                    "category": "AI Strategy",
+                    "author": "Robert C. Pozen",
+                    "date": "December 10, 2024",
+                    "reading_time": 6
+                },
+                {
+                    "title": "Leadership in the Age of Automation",
+                    "excerpt": "How leaders can navigate technological disruption",
+                    "category": "Leadership",
+                    "author": "Renee Fry",
+                    "date": "December 8, 2024",
+                    "reading_time": 7
+                },
+                {
+                    "title": "Sustainability Meets Innovation",
+                    "excerpt": "Creating sustainable business models",
+                    "category": "Sustainability",
+                    "author": "Sam Ransbotham",
+                    "date": "December 5, 2024",
+                    "reading_time": 5
+                }
+            ]
+        }
+        with open(DATA_CACHE_PATH, 'w') as f:
+            json.dump(default_data, f, indent=2)
+        print("[CACHE] Default data cache created successfully")
+    else:
+        print("[CACHE] data_cache.json found")
+
+# Initialize database and data cache on startup
 init_db()
+init_data_cache()
 
 # Content generator for full articles
 class ContentGenerator:
@@ -240,7 +290,7 @@ def home():
 
     # Load articles from cache
     try:
-        with open('data_cache.json', 'r') as f:
+        with open(DATA_CACHE_PATH, 'r') as f:
             data = json.load(f)
             articles = data.get('articles', [])
     except:
@@ -274,7 +324,7 @@ def serve_ai_js():
 @app.route('/data_cache.json')
 def serve_data_cache():
     """Serve data cache for client-side rendering"""
-    return send_from_directory('.', 'data_cache.json')
+    return send_from_directory(DB_DIR, 'data_cache.json')
 
 @app.route('/article/<slug>')
 def article_detail(slug):
@@ -292,7 +342,7 @@ def article_detail(slug):
 
     if not article:
         # Generate new article
-        with open('data_cache.json', 'r') as f:
+        with open(DATA_CACHE_PATH, 'r') as f:
             data = json.load(f)
             articles = data.get('articles', [])
             featured = data.get('featured', {})
