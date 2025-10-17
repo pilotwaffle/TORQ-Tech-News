@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 MIT Sloan Review - Full Web Application
-Complete website with visitor tracking, dynamic content, and automation
+Complete website with visitor tracking, dynamic content, automation, and advanced analytics
 """
 
 import sys
@@ -23,6 +23,8 @@ from pathlib import Path
 import hashlib
 import html
 import unicodedata
+import re
+from user_agents import parse
 
 app = Flask(__name__,
            static_folder='.',
@@ -36,11 +38,11 @@ DB_PATH = os.path.join(DB_DIR, "analytics.db")
 DATA_CACHE_PATH = os.path.join(DB_DIR, "data_cache.json")
 
 def init_db():
-    """Initialize database for analytics and content"""
+    """Initialize database for analytics and content with advanced tracking"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Visitors table
+    # Visitors table (existing)
     c.execute('''CREATE TABLE IF NOT EXISTS visitors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ip_hash TEXT,
@@ -50,7 +52,7 @@ def init_db():
         session_id TEXT
     )''')
 
-    # Page views table
+    # Page views table (existing)
     c.execute('''CREATE TABLE IF NOT EXISTS page_views (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         article_id TEXT,
@@ -59,7 +61,7 @@ def init_db():
         last_viewed DATETIME DEFAULT CURRENT_TIMESTAMP
     )''')
 
-    # Articles table with full content
+    # Articles table with full content (existing)
     c.execute('''CREATE TABLE IF NOT EXISTS articles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         slug TEXT UNIQUE,
@@ -76,9 +78,102 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )''')
 
+    # ===== ADVANCED ANALYTICS TABLES =====
+
+    # User sessions table - Track complete user sessions
+    c.execute('''CREATE TABLE IF NOT EXISTS user_sessions (
+        session_id TEXT PRIMARY KEY,
+        visitor_id TEXT,
+        start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+        end_time DATETIME,
+        total_pages INTEGER DEFAULT 0,
+        duration_seconds INTEGER DEFAULT 0,
+        bounce_rate REAL DEFAULT 0,
+        device_type TEXT,
+        browser TEXT,
+        os TEXT,
+        screen_resolution TEXT,
+        referrer_url TEXT,
+        landing_page TEXT,
+        is_active INTEGER DEFAULT 1
+    )''')
+
+    # User events table - Track granular user interactions
+    c.execute('''CREATE TABLE IF NOT EXISTS user_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT,
+        event_type TEXT,
+        element_id TEXT,
+        value TEXT,
+        page_url TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
+    )''')
+
+    # Referrers table - Track traffic sources
+    c.execute('''CREATE TABLE IF NOT EXISTS referrers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        referrer_url TEXT,
+        landing_page TEXT,
+        count INTEGER DEFAULT 1,
+        first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+        last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
+    )''')
+
+    # Devices table - Track device information
+    c.execute('''CREATE TABLE IF NOT EXISTS devices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_type TEXT,
+        browser TEXT,
+        os TEXT,
+        screen_resolution TEXT,
+        session_id TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
+    )''')
+
+    # Conversion funnels table - Track user journey steps
+    c.execute('''CREATE TABLE IF NOT EXISTS conversion_funnels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT,
+        funnel_step TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        metadata TEXT,
+        FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
+    )''')
+
+    # Create indexes for performance
+    c.execute('CREATE INDEX IF NOT EXISTS idx_visitors_session ON visitors(session_id)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_visitors_timestamp ON visitors(timestamp)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON user_sessions(start_time)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_events_session ON user_events(session_id)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_events_type ON user_events(event_type)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON user_events(timestamp)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_funnels_session ON conversion_funnels(session_id)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_funnels_step ON conversion_funnels(funnel_step)')
+
     conn.commit()
     conn.close()
-    print("[DB] Database initialized successfully")
+    print("[DB] Database initialized successfully with advanced analytics")
+
+def migrate_db():
+    """Migrate existing database to include advanced analytics tables"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    try:
+        # Check if advanced tables exist
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user_sessions'")
+        if not c.fetchone():
+            print("[DB MIGRATION] Adding advanced analytics tables...")
+            init_db()
+            print("[DB MIGRATION] Migration completed successfully")
+        else:
+            print("[DB MIGRATION] Advanced analytics tables already exist")
+    except Exception as e:
+        print(f"[DB MIGRATION ERROR] {e}")
+    finally:
+        conn.close()
 
 def init_data_cache():
     """Initialize data cache file if it doesn't exist"""
@@ -130,6 +225,7 @@ def init_data_cache():
 
 # Initialize database and data cache on startup
 init_db()
+migrate_db()
 init_data_cache()
 
 # Content generator for full articles
@@ -240,12 +336,29 @@ def normalize_slug(title):
     slug = re.sub(r'^-+|-+$', '', slug)  # Remove leading/trailing dashes
     return slug[:50]  # Limit to 50 characters
 
-# Visitor tracking
+def parse_user_agent(ua_string):
+    """Parse user agent string to extract device info"""
+    try:
+        user_agent = parse(ua_string)
+        return {
+            'device_type': 'mobile' if user_agent.is_mobile else ('tablet' if user_agent.is_tablet else 'desktop'),
+            'browser': f"{user_agent.browser.family} {user_agent.browser.version_string}",
+            'os': f"{user_agent.os.family} {user_agent.os.version_string}"
+        }
+    except:
+        return {
+            'device_type': 'unknown',
+            'browser': 'unknown',
+            'os': 'unknown'
+        }
+
+# Visitor tracking with enhanced device detection
 def track_visitor(page_url):
-    """Track visitor analytics"""
+    """Track visitor analytics with device detection"""
     try:
         ip = request.remote_addr
         user_agent = request.headers.get('User-Agent', '')
+        referrer = request.headers.get('Referer', 'direct')
 
         # Hash IP for privacy
         ip_hash = hashlib.sha256(ip.encode()).hexdigest()[:16]
@@ -255,10 +368,49 @@ def track_visitor(page_url):
             f"{ip}{user_agent}{datetime.now().hour}".encode()
         ).hexdigest()[:16])
 
+        # Parse device info
+        device_info = parse_user_agent(user_agent)
+
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
+
+        # Insert visitor record
         c.execute('''INSERT INTO visitors (ip_hash, user_agent, page_url, session_id)
                     VALUES (?, ?, ?, ?)''', (ip_hash, user_agent, page_url, session_id))
+
+        # Update or create session
+        c.execute('SELECT session_id FROM user_sessions WHERE session_id = ?', (session_id,))
+        session_exists = c.fetchone()
+
+        if not session_exists:
+            # Create new session
+            c.execute('''INSERT INTO user_sessions
+                        (session_id, visitor_id, landing_page, referrer_url, device_type, browser, os)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                     (session_id, ip_hash, page_url, referrer,
+                      device_info['device_type'], device_info['browser'], device_info['os']))
+
+            # Track funnel: homepage visit
+            if page_url == '/':
+                c.execute('''INSERT INTO conversion_funnels (session_id, funnel_step, metadata)
+                            VALUES (?, ?, ?)''', (session_id, 'homepage', json.dumps({'referrer': referrer})))
+
+            # Track referrer
+            if referrer != 'direct':
+                c.execute('SELECT id, count FROM referrers WHERE referrer_url = ? AND landing_page = ?',
+                         (referrer, page_url))
+                ref_result = c.fetchone()
+                if ref_result:
+                    c.execute('UPDATE referrers SET count = ?, last_seen = CURRENT_TIMESTAMP WHERE id = ?',
+                             (ref_result[1] + 1, ref_result[0]))
+                else:
+                    c.execute('''INSERT INTO referrers (referrer_url, landing_page, count)
+                                VALUES (?, ?, 1)''', (referrer, page_url))
+        else:
+            # Update existing session
+            c.execute('UPDATE user_sessions SET total_pages = total_pages + 1 WHERE session_id = ?',
+                     (session_id,))
+
         conn.commit()
         conn.close()
 
@@ -270,6 +422,8 @@ def track_visitor(page_url):
 def track_article_view(article_id, article_title):
     """Track article views"""
     try:
+        session_id = request.cookies.get('session_id')
+
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
@@ -287,10 +441,193 @@ def track_article_view(article_id, article_title):
             c.execute('''INSERT INTO page_views (article_id, article_title, view_count)
                         VALUES (?, ?, 1)''', (article_id, article_title))
 
+        # Track funnel: article view
+        if session_id:
+            c.execute('''INSERT INTO conversion_funnels (session_id, funnel_step, metadata)
+                        VALUES (?, ?, ?)''',
+                     (session_id, 'article_view', json.dumps({'article_id': article_id, 'title': article_title})))
+
         conn.commit()
         conn.close()
     except Exception as e:
         print(f"[ERROR] Article tracking error: {e}")
+
+# ===== ADVANCED ANALYTICS API ENDPOINTS =====
+
+@app.route('/api/track-event', methods=['POST'])
+def track_event():
+    """Track user events (scroll, click, time-on-page, etc.)"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id') or request.cookies.get('session_id')
+        event_type = data.get('event_type')
+        element_id = data.get('element_id', '')
+        value = data.get('value', '')
+        page_url = data.get('page_url', '')
+
+        if not session_id or not event_type:
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        # Insert event
+        c.execute('''INSERT INTO user_events (session_id, event_type, element_id, value, page_url)
+                    VALUES (?, ?, ?, ?, ?)''',
+                 (session_id, event_type, element_id, str(value), page_url))
+
+        # Track specific funnel events
+        if event_type == 'scroll_depth' and value == '100':
+            c.execute('''INSERT INTO conversion_funnels (session_id, funnel_step, metadata)
+                        VALUES (?, ?, ?)''',
+                     (session_id, 'scroll_100', json.dumps({'page': page_url})))
+        elif event_type == 'outbound_link':
+            c.execute('''INSERT INTO conversion_funnels (session_id, funnel_step, metadata)
+                        VALUES (?, ?, ?)''',
+                     (session_id, 'external_click', json.dumps({'url': value})))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'status': 'success'}), 200
+
+    except Exception as e:
+        print(f"[ERROR] Event tracking error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/track-session', methods=['POST'])
+def track_session():
+    """Track session lifecycle events"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id') or request.cookies.get('session_id')
+        action = data.get('action')  # 'start', 'update', 'end'
+        duration = data.get('duration', 0)
+        screen_resolution = data.get('screen_resolution', '')
+
+        if not session_id:
+            return jsonify({'error': 'Missing session_id'}), 400
+
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        if action == 'end':
+            # Calculate bounce rate (1 if only one page viewed, 0 otherwise)
+            c.execute('SELECT total_pages FROM user_sessions WHERE session_id = ?', (session_id,))
+            result = c.fetchone()
+            if result:
+                bounce_rate = 1.0 if result[0] <= 1 else 0.0
+                c.execute('''UPDATE user_sessions
+                            SET end_time = CURRENT_TIMESTAMP, duration_seconds = ?,
+                                bounce_rate = ?, is_active = 0
+                            WHERE session_id = ?''',
+                         (duration, bounce_rate, session_id))
+        elif action == 'update':
+            c.execute('''UPDATE user_sessions
+                        SET duration_seconds = ?, screen_resolution = ?
+                        WHERE session_id = ?''',
+                     (duration, screen_resolution, session_id))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'status': 'success'}), 200
+
+    except Exception as e:
+        print(f"[ERROR] Session tracking error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics/advanced')
+def advanced_analytics():
+    """Get advanced analytics data"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        # Average session duration
+        c.execute('''SELECT AVG(duration_seconds) FROM user_sessions
+                    WHERE duration_seconds > 0 AND start_time > datetime('now', '-7 days')''')
+        avg_duration = c.fetchone()[0] or 0
+
+        # Bounce rate
+        c.execute('''SELECT AVG(bounce_rate) FROM user_sessions
+                    WHERE start_time > datetime('now', '-7 days')''')
+        bounce_rate = c.fetchone()[0] or 0
+
+        # Top referrers
+        c.execute('''SELECT referrer_url, SUM(count) as total FROM referrers
+                    GROUP BY referrer_url ORDER BY total DESC LIMIT 10''')
+        top_referrers = [{'url': row[0], 'count': row[1]} for row in c.fetchall()]
+
+        # Device breakdown
+        c.execute('''SELECT device_type, COUNT(*) as count FROM user_sessions
+                    WHERE start_time > datetime('now', '-7 days')
+                    GROUP BY device_type''')
+        devices = [{'type': row[0], 'count': row[1]} for row in c.fetchall()]
+
+        # Browser breakdown
+        c.execute('''SELECT browser, COUNT(*) as count FROM user_sessions
+                    WHERE start_time > datetime('now', '-7 days')
+                    GROUP BY browser ORDER BY count DESC LIMIT 10''')
+        browsers = [{'browser': row[0], 'count': row[1]} for row in c.fetchall()]
+
+        # Conversion funnel
+        c.execute('''SELECT funnel_step, COUNT(*) as count FROM conversion_funnels
+                    WHERE timestamp > datetime('now', '-7 days')
+                    GROUP BY funnel_step''')
+        funnel = [{'step': row[0], 'count': row[1]} for row in c.fetchall()]
+
+        # Popular content by hour
+        c.execute('''SELECT strftime('%H', timestamp) as hour, COUNT(*) as count
+                    FROM user_events
+                    WHERE event_type = 'time_on_page' AND timestamp > datetime('now', '-7 days')
+                    GROUP BY hour ORDER BY hour''')
+        hourly_activity = [{'hour': int(row[0]), 'count': row[1]} for row in c.fetchall()]
+
+        # User journey paths (top 10 common paths)
+        c.execute('''SELECT v1.page_url as page1, v2.page_url as page2, COUNT(*) as count
+                    FROM visitors v1
+                    JOIN visitors v2 ON v1.session_id = v2.session_id
+                        AND v2.timestamp > v1.timestamp
+                    WHERE v1.timestamp > datetime('now', '-7 days')
+                    GROUP BY page1, page2
+                    ORDER BY count DESC LIMIT 10''')
+        user_paths = [{'from': row[0], 'to': row[1], 'count': row[2]} for row in c.fetchall()]
+
+        # Scroll depth statistics
+        c.execute('''SELECT value, COUNT(*) as count FROM user_events
+                    WHERE event_type = 'scroll_depth' AND timestamp > datetime('now', '-7 days')
+                    GROUP BY value ORDER BY value''')
+        scroll_depths = [{'depth': row[0], 'count': row[1]} for row in c.fetchall()]
+
+        # Active sessions count
+        c.execute('SELECT COUNT(*) FROM user_sessions WHERE is_active = 1')
+        active_sessions = c.fetchone()[0] or 0
+
+        # Total sessions (7 days)
+        c.execute('''SELECT COUNT(*) FROM user_sessions
+                    WHERE start_time > datetime('now', '-7 days')''')
+        total_sessions = c.fetchone()[0] or 0
+
+        conn.close()
+
+        return jsonify({
+            'avg_session_duration': round(avg_duration, 2),
+            'bounce_rate': round(bounce_rate * 100, 2),
+            'top_referrers': top_referrers,
+            'devices': devices,
+            'browsers': browsers,
+            'conversion_funnel': funnel,
+            'hourly_activity': hourly_activity,
+            'user_paths': user_paths,
+            'scroll_depths': scroll_depths,
+            'active_sessions': active_sessions,
+            'total_sessions_7d': total_sessions
+        })
+
+    except Exception as e:
+        print(f"[ERROR] Advanced analytics error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # Routes
 @app.route('/')
@@ -309,8 +646,13 @@ def home():
 
     response = send_from_directory('.', 'index.html')
     if session_id:
-        response.set_cookie('session_id', session_id)
+        response.set_cookie('session_id', session_id, max_age=86400)  # 24 hours
     return response
+
+@app.route('/analytics.js')
+def serve_analytics_js():
+    """Serve analytics tracking script"""
+    return send_from_directory('.', 'analytics.js')
 
 @app.route('/styles.css')
 def serve_css():
@@ -504,6 +846,7 @@ def article_detail(slug):
         </script>
 
         <link rel="stylesheet" href="/styles.css">
+        <script src="/analytics.js" defer></script>
         <style>
             .article-detail {{
                 max-width: 800px;
@@ -665,7 +1008,7 @@ def article_detail(slug):
     )
 
     if session_id:
-        response.set_cookie('session_id', session_id)
+        response.set_cookie('session_id', session_id, max_age=86400)
 
     return response
 
@@ -863,6 +1206,7 @@ if __name__ == '__main__':
     print()
     print("[INFO] Initializing application...")
     print("[INFO] Database: E:/sloan-review-landing/analytics.db")
+    print("[INFO] Advanced analytics enabled")
     print()
 
     # Start background automation
@@ -873,6 +1217,7 @@ if __name__ == '__main__':
     print("[SUCCESS] Server starting on http://localhost:5000")
     print("[INFO] Admin Dashboard: http://localhost:5000/admin")
     print("[INFO] API Analytics: http://localhost:5000/api/analytics")
+    print("[INFO] Advanced Analytics: http://localhost:5000/api/analytics/advanced")
     print("="*60)
     print()
 
