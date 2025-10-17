@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 MIT Sloan Review - Full Web Application
 Complete website with visitor tracking, dynamic content, and automation
 """
+
+import sys
+import os
+
+# Force UTF-8 encoding for Windows compatibility
+if sys.platform.startswith('win'):
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from datetime import datetime, timedelta
@@ -13,6 +21,8 @@ import time
 import sqlite3
 from pathlib import Path
 import hashlib
+import html
+import unicodedata
 
 app = Flask(__name__,
            static_folder='.',
@@ -112,8 +122,8 @@ def init_data_cache():
                 }
             ]
         }
-        with open(DATA_CACHE_PATH, 'w') as f:
-            json.dump(default_data, f, indent=2)
+        with open(DATA_CACHE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(default_data, f, indent=2, ensure_ascii=False)
         print("[CACHE] Default data cache created successfully")
     else:
         print("[CACHE] data_cache.json found")
@@ -290,10 +300,11 @@ def home():
 
     # Load articles from cache
     try:
-        with open(DATA_CACHE_PATH, 'r') as f:
+        with open(DATA_CACHE_PATH, 'r', encoding='utf-8') as f:
             data = json.load(f)
             articles = data.get('articles', [])
-    except:
+    except Exception as e:
+        print(f"[ERROR] Failed to load cache in home route: {e}")
         articles = []
 
     response = send_from_directory('.', 'index.html')
@@ -333,19 +344,20 @@ def serve_logo():
 
 @app.route('/article/<slug>')
 def article_detail(slug):
-    """Full article page - redirects to external MIT Sloan articles or generates content"""
+    """Full article page - displays extracted content on-site with source attribution"""
     session_id = track_visitor(f'/article/{slug}')
 
     # Clean up the incoming slug
     slug = slug.strip('-')
 
-    # Load data cache to check for external links
+    # Load data cache to get article data
     try:
-        with open(DATA_CACHE_PATH, 'r') as f:
+        with open(DATA_CACHE_PATH, 'r', encoding='utf-8') as f:
             data = json.load(f)
             articles = data.get('articles', [])
             featured = data.get('featured', {})
-    except:
+    except Exception as e:
+        print(f"[ERROR] Failed to load data cache: {e}")
         articles = []
         featured = {}
 
@@ -363,64 +375,134 @@ def article_detail(slug):
         else:
             cached_article = next((a for a in articles if normalize_slug(a['title']).startswith(slug[:20])), None)
 
-    # If article has external link, redirect to it
-    if cached_article and cached_article.get('link') and cached_article['link'] not in ['#', '']:
-        from flask import redirect
-        return redirect(cached_article['link'])
-
-    # Get article from database or generate it
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('SELECT * FROM articles WHERE slug = ?', (slug,))
-    article = c.fetchone()
-
-    if not article:
-        # Generate new article
-        if cached_article:
-            full_content = ContentGenerator.generate_full_article(
-                cached_article['title'],
-                cached_article.get('category', 'Strategy')
-            )
-
-            # Get author title (featured articles have author_title, regular ones don't)
-            author_title = cached_article.get('author_title', 'Professor')
-
-            # Save to database
-            c.execute('''INSERT INTO articles
-                        (slug, title, excerpt, content, category, author, author_title,
-                         published_date, reading_time, image_url)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                     (slug,
-                      cached_article['title'],
-                      cached_article.get('excerpt', ''),
-                      full_content,
-                      cached_article.get('category', 'Strategy'),
-                      cached_article.get('author', 'Unknown'),
-                      author_title,
-                      cached_article.get('date', datetime.now().strftime("%B %d, %Y")),
-                      cached_article.get('reading_time', 10),
-                      cached_article.get('image', '')))
-            conn.commit()
-
-            c.execute('SELECT * FROM articles WHERE slug = ?', (slug,))
-            article = c.fetchone()
-
-    conn.close()
-
-    if not article:
+    if not cached_article:
         return "Article not found", 404
 
     # Track view
-    track_article_view(slug, article[2])  # article[2] is title
+    track_article_view(slug, cached_article.get('title', 'Unknown'))
 
-    # Render article template
+    # Check if we have extracted full_text content
+    has_extracted_content = cached_article.get('full_text') and len(cached_article.get('full_text', '')) > 100
+
+    # Prepare article content
+    if has_extracted_content:
+        # Use extracted content with proper attribution
+        article_content = cached_article.get('full_text', '')
+
+        # Normalize Unicode text to ASCII for Windows compatibility
+        # First normalize to decomposed form (NFD), then encode as ASCII ignoring errors
+        article_content = unicodedata.normalize('NFKD', article_content)
+        article_content = article_content.encode('ascii', 'ignore').decode('ascii')
+
+        # Format article text into HTML paragraphs (escape HTML to prevent injection)
+        paragraphs = article_content.split('\n\n')
+        formatted_content = ''.join(f'<p>{html.escape(p.strip())}</p>' for p in paragraphs if p.strip())
+
+        # Add source attribution banner at the top
+        source_name = html.escape(cached_article.get('source', 'Original Source'))
+        source_url = html.escape(cached_article.get('link', '#'))
+
+        source_banner = f"""
+        <div class="source-attribution">
+            <div class="attribution-icon">ℹ️</div>
+            <div class="attribution-text">
+                <strong>Content from {source_name}</strong>
+                <p>This article is aggregated from the original source. We've extracted and displayed it here for your convenience with proper attribution.</p>
+            </div>
+        </div>
+        """
+
+        full_content = f"""
+        {source_banner}
+        <div class="article-full-content extracted-content">
+            {formatted_content}
+        </div>
+        <div class="original-source-cta">
+            <a href="{source_url}" target="_blank" rel="noopener noreferrer" class="read-original-btn">
+                📰 Read Original Article at {source_name}
+            </a>
+        </div>
+        """
+
+        # Use summary for excerpt if available
+        excerpt = cached_article.get('summary', cached_article.get('excerpt', ''))
+        keywords = ', '.join(cached_article.get('keywords', [])[:5]) if cached_article.get('keywords') else ''
+
+    else:
+        # Fall back to generated content
+        full_content = ContentGenerator.generate_full_article(
+            cached_article['title'],
+            cached_article.get('category', 'Strategy')
+        )
+        excerpt = cached_article.get('excerpt', '')
+        keywords = cached_article.get('category', 'Technology')
+
+    # Prepare meta information (escape for HTML safety)
+    title = html.escape(cached_article.get('title', 'Article'))
+    category = html.escape(cached_article.get('category', 'Technology'))
+    author = html.escape(cached_article.get('author', 'Unknown'))
+    date = html.escape(cached_article.get('date', datetime.now().strftime("%B %d, %Y")))
+    reading_time = cached_article.get('reading_time', 10)
+
+    # Prepare excerpt and keywords for meta tags (escape quotes and HTML)
+    excerpt_text = excerpt.replace('"', '&quot;').replace("'", '&#39;')[:160]
+    keywords_text = keywords.replace('"', '&quot;').replace("'", '&#39;') if keywords else ''
+
+    # Prepare JSON-safe strings for structured data
+    title_json = title.replace('"', '\\"')
+    author_json = author.replace('"', '\\"')
+    excerpt_json = excerpt_text[:200].replace('"', '\\"')
+    category_json = category.replace('"', '\\"')
+
+    # Render article template with SEO optimization
     article_html = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{article[2]} - MIT Sloan Management Review</title>
+
+        <!-- SEO Meta Tags -->
+        <title>{title} - TORQ Tech News</title>
+        <meta name="description" content="{excerpt_text}">
+        <meta name="keywords" content="{keywords_text}">
+        <meta name="author" content="{author}">
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="article">
+        <meta property="og:title" content="{title}">
+        <meta property="og:description" content="{excerpt_text[:200]}">
+        <meta property="og:site_name" content="TORQ Tech News">
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{title}">
+        <meta name="twitter:description" content="{excerpt_text[:200]}">
+
+        <!-- Structured Data (Schema.org) -->
+        <script type="application/ld+json">
+        {{
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": "{title_json}",
+          "description": "{excerpt_json}",
+          "author": {{
+            "@type": "Person",
+            "name": "{author_json}"
+          }},
+          "publisher": {{
+            "@type": "Organization",
+            "name": "TORQ Tech News",
+            "logo": {{
+              "@type": "ImageObject",
+              "url": "https://torqtechnews.com/torq-logo.svg"
+            }}
+          }},
+          "datePublished": "{date}",
+          "articleSection": "{category_json}"
+        }}
+        </script>
+
         <link rel="stylesheet" href="/styles.css">
         <style>
             .article-detail {{
@@ -438,12 +520,38 @@ def article_detail(slug):
                 font-weight: 800;
                 margin-bottom: 1rem;
                 color: #1a1a1a;
+                line-height: 1.2;
             }}
             .article-meta {{
                 display: flex;
                 gap: 1rem;
                 color: #666;
                 font-size: 0.9rem;
+                flex-wrap: wrap;
+            }}
+            .source-attribution {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 1.5rem;
+                border-radius: 12px;
+                margin-bottom: 2rem;
+                display: flex;
+                gap: 1rem;
+                align-items: flex-start;
+            }}
+            .attribution-icon {{
+                font-size: 2rem;
+                flex-shrink: 0;
+            }}
+            .attribution-text strong {{
+                display: block;
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+            }}
+            .attribution-text p {{
+                margin: 0;
+                opacity: 0.95;
+                font-size: 0.95rem;
             }}
             .article-full-content {{
                 line-height: 1.8;
@@ -451,12 +559,16 @@ def article_detail(slug):
             }}
             .article-full-content p {{
                 margin-bottom: 1.5rem;
+                color: #2d2d2d;
             }}
             .article-full-content h3 {{
                 margin-top: 2rem;
                 margin-bottom: 1rem;
                 font-size: 1.8rem;
                 color: #2d2d2d;
+            }}
+            .extracted-content p {{
+                text-align: justify;
             }}
             .lead-paragraph {{
                 font-size: 1.25rem;
@@ -466,22 +578,54 @@ def article_detail(slug):
             .key-takeaways {{
                 background-color: #f5f5f5;
                 padding: 2rem;
-                border-left: 4px solid #A31F34;
+                border-left: 4px solid #ef233c;
                 margin-top: 2rem;
             }}
             .key-takeaways h4 {{
                 margin-top: 0;
-                color: #A31F34;
+                color: #ef233c;
+            }}
+            .original-source-cta {{
+                margin-top: 3rem;
+                padding: 2rem;
+                background: linear-gradient(135deg, #ef233c 0%, #d32f2f 100%);
+                border-radius: 12px;
+                text-align: center;
+            }}
+            .read-original-btn {{
+                display: inline-block;
+                padding: 1rem 2rem;
+                background: white;
+                color: #ef233c;
+                text-decoration: none;
+                font-weight: 700;
+                font-size: 1.1rem;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }}
+            .read-original-btn:hover {{
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
             }}
             .back-link {{
                 display: inline-block;
                 margin: 2rem 0;
-                color: #A31F34;
+                color: #ef233c;
                 text-decoration: none;
                 font-weight: 600;
+                font-size: 1rem;
             }}
             .back-link:hover {{
                 text-decoration: underline;
+            }}
+            @media (max-width: 768px) {{
+                .article-title {{
+                    font-size: 2rem;
+                }}
+                .article-detail {{
+                    padding: 1rem;
+                }}
             }}
         </style>
     </head>
@@ -490,22 +634,20 @@ def article_detail(slug):
             <a href="/" class="back-link">← Back to Home</a>
 
             <div class="article-header">
-                <div class="article-category" style="color: #A31F34; font-weight: 600; margin-bottom: 1rem;">
-                    {article[5]}
+                <div class="article-category" style="color: #ef233c; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">
+                    {category}
                 </div>
-                <h1 class="article-title">{article[2]}</h1>
+                <h1 class="article-title">{title}</h1>
                 <div class="article-meta">
-                    <span>By {article[6]}</span>
+                    <span>By {author}</span>
                     <span>•</span>
-                    <span>{article[8]}</span>
+                    <span>{date}</span>
                     <span>•</span>
-                    <span>{article[9]} min read</span>
-                    <span>•</span>
-                    <span>{article[12]} views</span>
+                    <span>{reading_time} min read</span>
                 </div>
             </div>
 
-            {article[4]}
+            {full_content}
 
             <a href="/" class="back-link">← Back to Home</a>
         </div>
@@ -515,10 +657,11 @@ def article_detail(slug):
     </html>
     """
 
+    # Encode HTML response as UTF-8 bytes to handle special characters
     response = app.response_class(
-        response=article_html,
+        response=article_html.encode('utf-8'),
         status=200,
-        mimetype='text/html'
+        mimetype='text/html; charset=utf-8'
     )
 
     if session_id:
@@ -669,4 +812,4 @@ if __name__ == '__main__':
     print("="*60)
     print()
 
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)

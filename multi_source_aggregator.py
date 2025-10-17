@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 TORQ Tech News - Multi-Source News Aggregator
 Fetches tech news from multiple sources: MIT Sloan, TechCrunch, MIT Tech Review, Hacker News
 """
+
+import sys
+import os
+
+# Force UTF-8 encoding for Windows compatibility
+if sys.platform.startswith('win'):
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 import os
 import json
@@ -14,6 +22,8 @@ from typing import List, Dict, Optional
 import requests
 from bs4 import BeautifulSoup
 import random
+from newspaper import Article
+import hashlib
 
 class MultiSourceAggregator:
     """
@@ -267,6 +277,53 @@ class MultiSourceAggregator:
         selected = random.choice(unsplash_ids)
         return f"https://images.unsplash.com/{selected}?w=800&h=600&fit=crop"
 
+    def extract_article_content(self, url: str) -> Dict[str, str]:
+        """
+        Extract full article content from URL using newspaper3k
+
+        Args:
+            url: Article URL to extract
+
+        Returns:
+            Dict with extracted content (title, text, top_image, authors, publish_date)
+        """
+        try:
+            article = Article(url)
+            article.download()
+            article.parse()
+
+            # Extract natural language features (keywords, summary)
+            try:
+                article.nlp()
+            except:
+                pass  # NLP is optional
+
+            return {
+                'title': article.title,
+                'text': article.text,
+                'top_image': article.top_image,
+                'authors': article.authors,
+                'publish_date': str(article.publish_date) if article.publish_date else None,
+                'summary': article.summary if hasattr(article, 'summary') else '',
+                'keywords': article.keywords if hasattr(article, 'keywords') else [],
+                'url': url,
+                'extracted': True
+            }
+        except Exception as e:
+            print(f"  [WARN] Could not extract content from {url}: {e}")
+            return {
+                'title': '',
+                'text': '',
+                'top_image': '',
+                'authors': [],
+                'publish_date': None,
+                'summary': '',
+                'keywords': [],
+                'url': url,
+                'extracted': False,
+                'error': str(e)
+            }
+
     def _generate_techcrunch_fallback(self, count: int) -> List[Dict]:
         """Generate TechCrunch fallback articles"""
         titles = [
@@ -322,8 +379,13 @@ class MultiSourceAggregator:
             'source': 'Hacker News'
         } for i in range(count)]
 
-    def fetch_all_articles(self) -> Dict:
-        """Fetch articles from all sources"""
+    def fetch_all_articles(self, extract_content: bool = True) -> Dict:
+        """
+        Fetch articles from all sources
+
+        Args:
+            extract_content: If True, extract full article content using newspaper3k
+        """
         print("="*60)
         print("[AGGREGATOR] TORQ Tech News - Multi-Source Aggregator")
         print("="*60)
@@ -346,6 +408,39 @@ class MultiSourceAggregator:
 
         mit_sloan = self.fetch_mit_sloan_articles(1)
         all_articles.extend(mit_sloan)
+
+        # Extract full article content if requested
+        if extract_content:
+            print()
+            print("[*] Extracting full article content...")
+            for article in all_articles:
+                if article.get('link') and article['link'] not in ['#', '']:
+                    print(f"  [*] Extracting: {article['title'][:50]}...")
+                    extracted = self.extract_article_content(article['link'])
+
+                    if extracted['extracted']:
+                        # Add extracted content to article
+                        article['full_text'] = extracted['text']
+                        article['summary'] = extracted['summary'] or article.get('excerpt', '')
+                        article['keywords'] = extracted['keywords']
+
+                        # Update image if better quality available
+                        if extracted['top_image']:
+                            article['image'] = extracted['top_image']
+
+                        # Update authors if available
+                        if extracted['authors']:
+                            article['author'] = ', '.join(extracted['authors'][:2])  # First 2 authors
+
+                        print(f"    [OK] Extracted {len(extracted['text'])} characters")
+                    else:
+                        # Keep article with just excerpt
+                        article['full_text'] = ''
+                        article['summary'] = article.get('excerpt', '')
+                        article['keywords'] = []
+                        print(f"    [SKIP] Using excerpt only")
+
+                    time.sleep(1)  # Rate limiting between extractions
 
         # Shuffle for diversity
         random.shuffle(all_articles)
@@ -376,6 +471,7 @@ class MultiSourceAggregator:
         print("="*60)
         print("[SUCCESS] Multi-source aggregation complete!")
         print(f"[INFO] Total articles: {len(all_articles)}")
+        print(f"[INFO] Articles with full content: {sum(1 for a in all_articles if a.get('full_text'))}")
         print(f"[INFO] Sources: {', '.join(cache_data['sources_used'])}")
         print("="*60)
 
