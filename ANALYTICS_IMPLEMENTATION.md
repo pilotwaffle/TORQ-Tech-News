@@ -251,6 +251,5 @@ The tool is:
 
 ---
 
-**Delivered**: October 17, 2025
 **Version**: 1.0.0
 **Status**: Complete and tested
