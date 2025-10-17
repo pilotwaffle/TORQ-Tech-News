@@ -3,79 +3,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - MIT Sloan Review</title>
+    <title>TORQ Tech News - Admin Dashboard</title>
+
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
     <style>
+        /* ===== CSS Variables & Reset ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            /* TORQ Branding Colors */
+            --torq-red: #ef233c;
+            --torq-red-dark: #d32f2f;
+            --torq-blue: #1565C0;
+            --torq-blue-dark: #0d47a1;
+
+            /* Dark Theme */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --bg-card: #1e1e1e;
+
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #808080;
+
+            /* Status Colors */
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --info: #2196f3;
+
+            /* Spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* ===== Layout ===== */
         .dashboard {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
         }
 
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--torq-red);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--torq-red), var(--torq-blue));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .nav-menu {
+            padding: var(--spacing-md);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--torq-red), var(--torq-red-dark));
+            color: var(--text-primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: var(--spacing-lg);
+            max-width: 100%;
+        }
+
+        /* Header */
         .header {
-            background-color: #A31F34;
-            color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
         }
 
-        .header h1 {
+        .header-title {
             font-size: 2rem;
-            margin-bottom: 0.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--torq-red), var(--torq-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--torq-red), var(--torq-red-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 35, 60, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--torq-blue);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
         }
 
         .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
         }
 
-        .stat-card h3 {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--torq-red), var(--torq-blue));
         }
 
-        .stat-card .value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #A31F34;
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
         }
 
-        .section {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-
-        .section h2 {
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: #333;
+        }
+
+        .stat-icon.red { background: rgba(239, 35, 60, 0.15); color: var(--torq-red); }
+        .stat-icon.blue { background: rgba(21, 101, 192, 0.15); color: var(--torq-blue); }
+        .stat-icon.green { background: rgba(76, 175, 80, 0.15); color: var(--success); }
+        .stat-icon.orange { background: rgba(255, 152, 0, 0.15); color: var(--warning); }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: var(--spacing-xs);
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--error); }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
         }
 
         table {
@@ -83,191 +332,1347 @@
             border-collapse: collapse;
         }
 
-        th, td {
-            padding: 1rem;
+        thead th {
             text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background-color: #f9f9f9;
+            padding: var(--spacing-sm);
+            color: var(--text-secondary);
             font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
             font-size: 0.85rem;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         }
 
-        tr:hover {
-            background-color: #f9f9f9;
+        tbody td {
+            padding: var(--spacing-md) var(--spacing-sm);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
         }
 
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Badge */
         .badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
-            border-radius: 12px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .badge-success {
-            background-color: #d4edda;
-            color: #155724;
+        .badge-success { background: rgba(76, 175, 80, 0.2); color: var(--success); }
+        .badge-warning { background: rgba(255, 152, 0, 0.2); color: var(--warning); }
+        .badge-error { background: rgba(244, 67, 54, 0.2); color: var(--error); }
+        .badge-info { background: rgba(33, 150, 243, 0.2); color: var(--info); }
+        .badge-default { background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); }
+
+        /* Activity Feed */
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        .badge-info {
-            background-color: #d1ecf1;
-            color: #0c5460;
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--torq-blue);
         }
 
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #999;
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(21, 101, 192, 0.2);
+            color: var(--torq-blue);
+            flex-shrink: 0;
         }
 
-        .timestamp {
-            font-size: 0.85rem;
-            color: #999;
+        .activity-content {
+            flex: 1;
         }
 
-        .refresh-btn {
-            background-color: #A31F34;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
+        .activity-title {
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 0.25rem;
         }
 
-        .refresh-btn:hover {
-            background-color: #8B1A2D;
+        .activity-time {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
         }
 
-        .auto-refresh {
-            display: inline-block;
-            margin-left: 1rem;
-            color: #666;
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: var(--spacing-md);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: var(--spacing-lg);
+            right: var(--spacing-lg);
+            min-width: 300px;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--success);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast-icon {
+            font-size: 1.5rem;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .toast-message {
             font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--torq-red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--torq-red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto var(--spacing-md);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .btn-action {
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: var(--torq-blue);
+            border-color: var(--torq-blue);
+        }
+
+        .btn-action.danger:hover {
+            background: var(--error);
+            border-color: var(--error);
+        }
+
+        /* System Health Indicators */
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+
+        .health-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+        }
+
+        .health-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .health-status.operational { background: var(--success); }
+        .health-status.degraded { background: var(--warning); }
+        .health-status.error { background: var(--error); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .health-label {
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: var(--spacing-lg);
+        }
+
+        .modal-footer {
+            padding: var(--spacing-lg);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--torq-blue);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: var(--spacing-md);
+            }
+
+            .header-title {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 1.75rem;
+            }
+
+            .toast {
+                min-width: auto;
+                left: var(--spacing-md);
+                right: var(--spacing-md);
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: var(--spacing-md);
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
     <div class="dashboard">
-        <div class="header">
-            <h1>📊 Admin Dashboard</h1>
-            <p>MIT Sloan Management Review - Analytics & Monitoring</p>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">T</div>
+                    <span>TORQ Admin</span>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <a href="#overview" class="nav-item active" data-section="overview">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#articles" class="nav-item" data-section="articles">
+                    <span class="nav-icon">📝</span>
+                    <span>Articles</span>
+                </a>
+                <a href="#analytics" class="nav-item" data-section="analytics">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics</span>
+                </a>
+                <a href="#operations" class="nav-item" data-section="operations">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Operations</span>
+                </a>
+                <a href="#health" class="nav-item" data-section="health">
+                    <span class="nav-icon">💚</span>
+                    <span>System Health</span>
+                </a>
+                <a href="/" class="nav-item" target="_blank">
+                    <span class="nav-icon">🌐</span>
+                    <span>View Site</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div>
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+                    <h1 class="header-title">Content Management Dashboard</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="refreshBtn">
+                        <span>🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                    <button class="btn btn-primary" id="addArticleBtn">
+                        <span>+</span>
+                        <span>Add Article</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <section id="overview-section" class="section-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Visitors (24h)</div>
+                                <div class="stat-value" id="visitors24h">-</div>
+                                <div class="stat-change positive">
+                                    <span>↑</span>
+                                    <span>Live tracking</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon red">👥</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Total Views</div>
+                                <div class="stat-value" id="totalViews">-</div>
+                                <div class="stat-change positive">
+                                    <span>↑</span>
+                                    <span>All time</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon blue">📊</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Articles</div>
+                                <div class="stat-value" id="articleCount">-</div>
+                                <div class="stat-change positive">
+                                    <span>📰</span>
+                                    <span>Published</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon green">📝</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Last Update</div>
+                                <div class="stat-value" style="font-size: 1.25rem;" id="lastUpdate">-</div>
+                                <div class="stat-change">
+                                    <span>🕒</span>
+                                    <span id="updateAge">-</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon orange">⏰</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Activity</h2>
+                        <span class="badge badge-info">Last 20</span>
+                    </div>
+                    <div class="activity-feed" id="activityFeed">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>Loading activity...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Articles Section -->
+            <section id="articles-section" class="section-content" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Article Management</h2>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary btn-icon" id="refreshArticlesBtn" title="Refresh">🔄</button>
+                            <button class="btn btn-primary" id="addArticleBtnTable">+ Add New</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="articlesTable">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Author</th>
+                                    <th>Date</th>
+                                    <th>Source</th>
+                                    <th>Views</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="articlesTableBody">
+                                <tr>
+                                    <td colspan="7" class="empty-state">
+                                        <div class="empty-state-icon">📄</div>
+                                        <p>Loading articles...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics-section" class="section-content" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Top Articles by Views</h2>
+                        <button class="btn btn-secondary" id="exportDataBtn">📥 Export Data</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="topArticlesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Top 10 Articles</h2>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Article Title</th>
+                                    <th>Views</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topArticlesTableBody">
+                                <tr>
+                                    <td colspan="4" class="empty-state">
+                                        <div class="empty-state-icon">📊</div>
+                                        <p>Loading analytics...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Operations Section -->
+            <section id="operations-section" class="section-content" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Content Operations</h2>
+                        <span class="badge badge-info">Automation Control</span>
+                    </div>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="padding: 1.5rem; background: var(--bg-tertiary); border-radius: var(--radius-md);">
+                            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Manual Content Update</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                                Trigger manual fetch from MIT Sloan and Hacker News sources. This will update the data cache with latest articles.
+                            </p>
+                            <button class="btn btn-primary" id="manualUpdateBtn">
+                                <span>🔄</span>
+                                <span>Fetch New Articles</span>
+                            </button>
+                            <div id="updateStatus" style="margin-top: 1rem; display: none;">
+                                <div class="badge badge-info">Status: <span id="updateStatusText">Idle</span></div>
+                            </div>
+                        </div>
+
+                        <div style="padding: 1.5rem; background: var(--bg-tertiary); border-radius: var(--radius-md);">
+                            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Cache Management</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                                Reload data cache from disk. Use this after manual file updates.
+                            </p>
+                            <button class="btn btn-secondary" id="refreshCacheBtn">
+                                <span>📂</span>
+                                <span>Refresh Cache</span>
+                            </button>
+                        </div>
+
+                        <div style="padding: 1.5rem; background: var(--bg-tertiary); border-radius: var(--radius-md);">
+                            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Database Statistics</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                <div>
+                                    <div style="color: var(--text-secondary); font-size: 0.85rem;">Total Visitors</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="dbTotalVisitors">-</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-secondary); font-size: 0.85rem;">Tracked Articles</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="dbTrackedArticles">-</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-secondary); font-size: 0.85rem;">Cache Size</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="cacheSize">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Health Section -->
+            <section id="health-section" class="section-content" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">System Health</h2>
+                        <span class="badge badge-success" id="overallHealthBadge">Operational</span>
+                    </div>
+                    <div class="health-grid">
+                        <div class="health-item">
+                            <div class="health-status operational" id="dbStatus"></div>
+                            <div>
+                                <div class="health-label">Database</div>
+                                <div style="font-size: 0.85rem; color: var(--text-tertiary);" id="dbStatusText">Checking...</div>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-status operational" id="cacheStatus"></div>
+                            <div>
+                                <div class="health-label">Cache</div>
+                                <div style="font-size: 0.85rem; color: var(--text-tertiary);" id="cacheStatusText">Checking...</div>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-status operational" id="aggregatorStatus"></div>
+                            <div>
+                                <div class="health-label">Aggregator</div>
+                                <div style="font-size: 0.85rem; color: var(--text-tertiary);" id="aggregatorStatusText">Checking...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">System Information</h3>
+                        <div style="background: var(--bg-tertiary); padding: 1.5rem; border-radius: var(--radius-md); font-family: monospace; font-size: 0.9rem;">
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>Service:</strong> <span id="serviceName">-</span>
+                            </div>
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>Version:</strong> <span id="serviceVersion">-</span>
+                            </div>
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>Last Health Check:</strong> <span id="lastHealthCheck">-</span>
+                            </div>
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>Active Sources:</strong> <span id="activeSources">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Article Modal -->
+    <div class="modal" id="addArticleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Article</h2>
+                <button class="modal-close" id="closeModalBtn">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addArticleForm">
+                    <div class="form-group">
+                        <label class="form-label">Title *</label>
+                        <input type="text" class="form-input" id="articleTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Excerpt *</label>
+                        <textarea class="form-textarea" id="articleExcerpt" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" id="articleCategory" required>
+                            <option value="">Select category</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Leadership">Leadership</option>
+                            <option value="AI Strategy">AI Strategy</option>
+                            <option value="Innovation">Innovation</option>
+                            <option value="Strategy">Strategy</option>
+                            <option value="Sustainability">Sustainability</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Author *</label>
+                        <input type="text" class="form-input" id="articleAuthor" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reading Time (minutes)</label>
+                        <input type="number" class="form-input" id="articleReadingTime" value="5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Image URL</label>
+                        <input type="url" class="form-input" id="articleImage" placeholder="https://...">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveArticleBtn">Save Article</button>
+            </div>
         </div>
+    </div>
 
-        <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh Data</button>
-        <span class="auto-refresh">Auto-refreshes every 30 seconds</span>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Visitors (24h)</h3>
-                <div class="value" id="visitors24h">-</div>
-            </div>
-
-            <div class="stat-card">
-                <h3>Total Page Views</h3>
-                <div class="value" id="totalViews">-</div>
-            </div>
-
-            <div class="stat-card">
-                <h3>Active Now</h3>
-                <div class="value" id="activeNow">-</div>
-            </div>
-
-            <div class="stat-card">
-                <h3>Top Article</h3>
-                <div class="value" style="font-size: 1rem;" id="topArticle">Loading...</div>
-            </div>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">✓</div>
+        <div class="toast-content">
+            <div class="toast-title" id="toastTitle">Success</div>
+            <div class="toast-message" id="toastMessage">Operation completed successfully</div>
         </div>
+    </div>
 
-        <div class="section">
-            <h2>🔥 Top Articles</h2>
-            <table id="topArticlesTable">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Article Title</th>
-                        <th>Views</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="4" class="loading">Loading data...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>📈 Recent Activity</h2>
-            <table id="recentActivityTable">
-                <thead>
-                    <tr>
-                        <th>Page</th>
-                        <th>Timestamp</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="3" class="loading">Loading data...</td></tr>
-                </tbody>
-            </table>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div style="color: var(--text-primary); font-weight: 600;">Processing...</div>
         </div>
     </div>
 
     <script>
-        async function loadAnalytics() {
+        // ===== Dashboard State =====
+        const state = {
+            currentSection: 'overview',
+            analyticsData: null,
+            healthData: null,
+            articlesData: null,
+            topArticlesChart: null,
+            autoRefreshInterval: null
+        };
+
+        // ===== Utility Functions =====
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toast.className = 'toast';
+            if (type !== 'success') toast.classList.add(type);
+
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        function formatDate(dateString) {
             try {
-                const response = await fetch('/api/analytics');
-                const data = await response.json();
-
-                // Update stats
-                document.getElementById('visitors24h').textContent = data.visitors_24h.toLocaleString();
-                document.getElementById('totalViews').textContent = data.total_views.toLocaleString();
-                document.getElementById('activeNow').textContent = Math.floor(Math.random() * 10) + 1; // Simulated
-
-                // Top article
-                if (data.top_articles.length > 0) {
-                    document.getElementById('topArticle').textContent =
-                        data.top_articles[0].title.substring(0, 30) + '...';
-                }
-
-                // Top articles table
-                const topArticlesBody = document.querySelector('#topArticlesTable tbody');
-                topArticlesBody.innerHTML = data.top_articles.map((article, index) => `
-                    <tr>
-                        <td>#${index + 1}</td>
-                        <td>${article.title}</td>
-                        <td><strong>${article.views}</strong></td>
-                        <td><span class="badge badge-success">Active</span></td>
-                    </tr>
-                `).join('') || '<tr><td colspan="4">No data available</td></tr>';
-
-                // Recent activity table
-                const activityBody = document.querySelector('#recentActivityTable tbody');
-                activityBody.innerHTML = data.recent_activity.slice(0, 10).map(activity => `
-                    <tr>
-                        <td>${activity.page}</td>
-                        <td class="timestamp">${new Date(activity.time).toLocaleString()}</td>
-                        <td><span class="badge badge-info">Recorded</span></td>
-                    </tr>
-                `).join('') || '<tr><td colspan="3">No activity yet</td></tr>';
-
-            } catch (error) {
-                console.error('Error loading analytics:', error);
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            } catch {
+                return dateString;
             }
         }
 
-        // Load on page load
-        loadAnalytics();
+        function formatTime(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return dateString;
+            }
+        }
 
-        // Auto-refresh every 30 seconds
-        setInterval(loadAnalytics, 30000);
+        function formatTimeAgo(dateString) {
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const seconds = Math.floor((now - date) / 1000);
+
+                if (seconds < 60) return 'just now';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+                return `${Math.floor(seconds / 86400)}d ago`;
+            } catch {
+                return 'recently';
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // ===== API Functions =====
+        async function fetchAnalytics() {
+            try {
+                const response = await fetch('/api/analytics');
+                if (!response.ok) throw new Error('Failed to fetch analytics');
+                state.analyticsData = await response.json();
+                return state.analyticsData;
+            } catch (error) {
+                console.error('Analytics fetch error:', error);
+                showToast('Error', 'Failed to fetch analytics data', 'error');
+                return null;
+            }
+        }
+
+        async function fetchHealth() {
+            try {
+                const response = await fetch('/health');
+                if (!response.ok) throw new Error('Failed to fetch health');
+                state.healthData = await response.json();
+                return state.healthData;
+            } catch (error) {
+                console.error('Health fetch error:', error);
+                showToast('Error', 'Failed to fetch health data', 'error');
+                return null;
+            }
+        }
+
+        async function fetchArticles() {
+            try {
+                const response = await fetch('/data_cache.json');
+                if (!response.ok) throw new Error('Failed to fetch articles');
+                state.articlesData = await response.json();
+                return state.articlesData;
+            } catch (error) {
+                console.error('Articles fetch error:', error);
+                showToast('Error', 'Failed to fetch articles', 'error');
+                return null;
+            }
+        }
+
+        async function triggerManualUpdate() {
+            showLoading();
+            try {
+                const response = await fetch('/api/manual-update');
+                if (!response.ok) throw new Error('Update failed');
+                const result = await response.json();
+                hideLoading();
+                showToast('Success', `Updated with ${result.article_count || 0} articles from ${result.sources?.length || 0} sources`);
+                await refreshAllData();
+            } catch (error) {
+                hideLoading();
+                console.error('Manual update error:', error);
+                showToast('Error', 'Failed to update content', 'error');
+            }
+        }
+
+        // ===== UI Update Functions =====
+        function updateOverviewStats(analytics, health, articles) {
+            if (analytics) {
+                document.getElementById('visitors24h').textContent = formatNumber(analytics.visitors_24h || 0);
+                document.getElementById('totalViews').textContent = formatNumber(analytics.total_views || 0);
+            }
+
+            if (articles) {
+                const count = (articles.articles?.length || 0) + (articles.featured ? 1 : 0);
+                document.getElementById('articleCount').textContent = count;
+            }
+
+            if (health && health.data) {
+                const lastUpdate = health.data.last_update || 'Unknown';
+                document.getElementById('lastUpdate').textContent = formatTime(lastUpdate);
+                document.getElementById('updateAge').textContent = formatTimeAgo(lastUpdate);
+            }
+        }
+
+        function updateActivityFeed(analytics) {
+            const feed = document.getElementById('activityFeed');
+            if (!analytics || !analytics.recent_activity || analytics.recent_activity.length === 0) {
+                feed.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No recent activity</p>
+                    </div>
+                `;
+                return;
+            }
+
+            feed.innerHTML = analytics.recent_activity.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon">👁️</div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.page || 'Page view'}</div>
+                        <div class="activity-time">${formatTimeAgo(activity.time)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateArticlesTable(articles) {
+            const tbody = document.getElementById('articlesTableBody');
+            if (!articles || !articles.articles || articles.articles.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon">📄</div>
+                            <p>No articles found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const allArticles = articles.featured ? [articles.featured, ...articles.articles] : articles.articles;
+
+            tbody.innerHTML = allArticles.map((article, index) => `
+                <tr>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${article.title || 'Untitled'}">
+                        <strong>${article.title || 'Untitled'}</strong>
+                    </td>
+                    <td><span class="badge badge-default">${article.category || 'General'}</span></td>
+                    <td>${article.author || 'Unknown'}</td>
+                    <td>${formatDate(article.date)}</td>
+                    <td>${article.source || 'Manual'}</td>
+                    <td><strong>${article.views || 0}</strong></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action" title="View" onclick="viewArticle('${article.link || '#'}')">👁️</button>
+                            <button class="btn-action" title="Edit" onclick="editArticle(${index})">✏️</button>
+                            <button class="btn-action danger" title="Delete" onclick="deleteArticle(${index})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateAnalyticsChart(analytics) {
+            if (!analytics || !analytics.top_articles || analytics.top_articles.length === 0) return;
+
+            const canvas = document.getElementById('topArticlesChart');
+            const ctx = canvas.getContext('2d');
+
+            // Destroy existing chart
+            if (state.topArticlesChart) {
+                state.topArticlesChart.destroy();
+            }
+
+            const topArticles = analytics.top_articles.slice(0, 10);
+            const labels = topArticles.map(a => {
+                const title = a.title || 'Untitled';
+                return title.length > 30 ? title.substring(0, 30) + '...' : title;
+            });
+            const data = topArticles.map(a => a.views || 0);
+
+            state.topArticlesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Views',
+                        data: data,
+                        backgroundColor: 'rgba(239, 35, 60, 0.8)',
+                        borderColor: 'rgba(239, 35, 60, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b0b0b0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b0b0b0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTopArticlesTable(analytics) {
+            const tbody = document.getElementById('topArticlesTableBody');
+            if (!analytics || !analytics.top_articles || analytics.top_articles.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <p>No analytics data available</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = analytics.top_articles.slice(0, 10).map((article, index) => `
+                <tr>
+                    <td><strong>#${index + 1}</strong></td>
+                    <td>${article.title || 'Untitled'}</td>
+                    <td><strong>${formatNumber(article.views || 0)}</strong></td>
+                    <td><span class="badge badge-success">📈 Trending</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateOperationsStats(analytics, articles) {
+            if (analytics) {
+                document.getElementById('dbTotalVisitors').textContent = formatNumber(analytics.total_views || 0);
+                document.getElementById('dbTrackedArticles').textContent = formatNumber(analytics.top_articles?.length || 0);
+            }
+
+            if (articles) {
+                const size = JSON.stringify(articles).length;
+                const sizeKB = (size / 1024).toFixed(1);
+                document.getElementById('cacheSize').textContent = `${sizeKB} KB`;
+            }
+        }
+
+        function updateHealthStatus(health) {
+            if (!health) return;
+
+            // Update overall status
+            const overallBadge = document.getElementById('overallHealthBadge');
+            const status = health.status || 'unknown';
+            overallBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            overallBadge.className = 'badge';
+
+            if (status === 'healthy') overallBadge.classList.add('badge-success');
+            else if (status === 'degraded') overallBadge.classList.add('badge-warning');
+            else overallBadge.classList.add('badge-error');
+
+            // Update component statuses
+            const components = health.components || {};
+
+            updateComponentStatus('db', components.database);
+            updateComponentStatus('cache', components.cache);
+            updateComponentStatus('aggregator', components.aggregator);
+
+            // Update system info
+            document.getElementById('serviceName').textContent = health.service || 'TORQ Tech News';
+            document.getElementById('serviceVersion').textContent = health.version || '1.0.0';
+            document.getElementById('lastHealthCheck').textContent = formatTime(health.timestamp || new Date().toISOString());
+            document.getElementById('activeSources').textContent = health.data?.sources?.join(', ') || 'None';
+        }
+
+        function updateComponentStatus(component, status) {
+            const statusEl = document.getElementById(`${component}Status`);
+            const textEl = document.getElementById(`${component}StatusText`);
+
+            statusEl.className = 'health-status';
+
+            if (status === 'operational') {
+                statusEl.classList.add('operational');
+                textEl.textContent = 'Operational';
+            } else if (status === 'degraded' || status === 'missing') {
+                statusEl.classList.add('degraded');
+                textEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            } else {
+                statusEl.classList.add('error');
+                textEl.textContent = 'Error';
+            }
+        }
+
+        // ===== Section Navigation =====
+        function switchSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            const section = document.getElementById(`${sectionName}-section`);
+            if (section) section.style.display = 'block';
+
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.section === sectionName) {
+                    item.classList.add('active');
+                }
+            });
+
+            state.currentSection = sectionName;
+
+            // Close mobile menu
+            document.getElementById('sidebar').classList.remove('active');
+        }
+
+        // ===== Article Actions =====
+        function viewArticle(link) {
+            if (link && link !== '#') {
+                window.open(link, '_blank');
+            } else {
+                showToast('Info', 'No link available for this article', 'warning');
+            }
+        }
+
+        function editArticle(index) {
+            showToast('Info', 'Edit functionality coming soon', 'warning');
+        }
+
+        function deleteArticle(index) {
+            if (confirm('Are you sure you want to delete this article?')) {
+                showToast('Info', 'Delete functionality coming soon', 'warning');
+            }
+        }
+
+        // ===== Data Export =====
+        function exportAnalyticsData() {
+            if (!state.analyticsData) {
+                showToast('Error', 'No analytics data to export', 'error');
+                return;
+            }
+
+            const data = JSON.stringify(state.analyticsData, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `torq-analytics-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('Success', 'Analytics data exported successfully');
+        }
+
+        // ===== Data Refresh =====
+        async function refreshAllData() {
+            const [analytics, health, articles] = await Promise.all([
+                fetchAnalytics(),
+                fetchHealth(),
+                fetchArticles()
+            ]);
+
+            updateOverviewStats(analytics, health, articles);
+            updateActivityFeed(analytics);
+            updateArticlesTable(articles);
+            updateAnalyticsChart(analytics);
+            updateTopArticlesTable(analytics);
+            updateOperationsStats(analytics, articles);
+            updateHealthStatus(health);
+        }
+
+        // ===== Auto Refresh =====
+        function startAutoRefresh() {
+            // Refresh every 30 seconds
+            state.autoRefreshInterval = setInterval(() => {
+                refreshAllData();
+            }, 30000);
+        }
+
+        function stopAutoRefresh() {
+            if (state.autoRefreshInterval) {
+                clearInterval(state.autoRefreshInterval);
+                state.autoRefreshInterval = null;
+            }
+        }
+
+        // ===== Event Listeners =====
+        document.addEventListener('DOMContentLoaded', () => {
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (item.dataset.section) {
+                        e.preventDefault();
+                        switchSection(item.dataset.section);
+                    }
+                });
+            });
+
+            // Mobile menu toggle
+            document.getElementById('mobileMenuToggle').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('active');
+            });
+
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                refreshAllData();
+                showToast('Success', 'Dashboard refreshed');
+            });
+
+            // Add article buttons
+            document.getElementById('addArticleBtn').addEventListener('click', () => {
+                document.getElementById('addArticleModal').classList.add('active');
+            });
+
+            document.getElementById('addArticleBtnTable').addEventListener('click', () => {
+                document.getElementById('addArticleModal').classList.add('active');
+            });
+
+            // Modal controls
+            document.getElementById('closeModalBtn').addEventListener('click', () => {
+                document.getElementById('addArticleModal').classList.remove('active');
+            });
+
+            document.getElementById('cancelModalBtn').addEventListener('click', () => {
+                document.getElementById('addArticleModal').classList.remove('active');
+            });
+
+            document.getElementById('saveArticleBtn').addEventListener('click', () => {
+                showToast('Info', 'Save functionality coming soon - requires backend API', 'warning');
+                document.getElementById('addArticleModal').classList.remove('active');
+            });
+
+            // Refresh articles
+            document.getElementById('refreshArticlesBtn').addEventListener('click', async () => {
+                const articles = await fetchArticles();
+                updateArticlesTable(articles);
+                showToast('Success', 'Articles refreshed');
+            });
+
+            // Export data
+            document.getElementById('exportDataBtn').addEventListener('click', exportAnalyticsData);
+
+            // Manual update
+            document.getElementById('manualUpdateBtn').addEventListener('click', triggerManualUpdate);
+
+            // Refresh cache
+            document.getElementById('refreshCacheBtn').addEventListener('click', async () => {
+                const articles = await fetchArticles();
+                updateArticlesTable(articles);
+                updateOperationsStats(state.analyticsData, articles);
+                showToast('Success', 'Cache refreshed');
+            });
+
+            // Initial data load
+            refreshAllData();
+
+            // Start auto-refresh
+            startAutoRefresh();
+
+            console.log('TORQ Admin Dashboard initialized');
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopAutoRefresh();
+        });
     </script>
 </body>
 </html>
