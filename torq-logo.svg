@@ -1,17 +1,30 @@
-<svg width="180" height="100" viewBox="0 0 180 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- TORQ Logo - Red and Blue Version -->
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <style>
+      :root {
+        --brand-red: #ef233c;   /* TORQ red (on-brand) */
+        --brand-blue: #2b2d42;  /* Space Cadet blue (on-brand) */
+      }
+      .torq-red { fill: var(--brand-red); }
+      .torq-blue { fill: var(--brand-blue); }
+      .wordmark { font-family: 'Montserrat', 'Poppins', 'Segoe UI', Arial, sans-serif; font-weight: 800; }
+    </style>
+  </defs>
 
-  <!-- Large T symbol in red -->
-  <g transform="translate(10, 10)">
-    <!-- Top horizontal bar -->
-    <rect x="0" y="0" width="80" height="15" fill="#D32F2F"/>
-    <!-- Vertical stem -->
-    <rect x="32.5" y="0" width="15" height="60" fill="#D32F2F"/>
-  </g>
+  <!-- Transparent background so it blends into white (or any) web page -->
+  <rect x="0" y="0" width="1200" height="800" fill="none"/>
 
-  <!-- TORQ text in red -->
-  <text x="10" y="85" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#D32F2F">TORQ</text>
+  <!-- T mark -->
+  <!-- Top bar -->
+  <rect x="300" y="120" width="600" height="44" rx="8" class="torq-red"/>
+  <!-- Tapered split stem (left and right shapes to create a center slit) -->
+  <path class="torq-red" d="M600 164 L565 340 L595 340 Z"/>
+  <path class="torq-red" d="M600 164 L605 340 L635 340 Z"/>
 
-  <!-- TECH NEWS text in blue -->
-  <text x="10" y="98" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#1565C0">TECH NEWS</text>
+  <!-- TORQ wordmark -->
+  <text x="600" y="520" class="torq-red wordmark" font-size="200" text-anchor="middle" letter-spacing="4">TORQ</text>
+
+  <!-- TECH NEWS descriptor -->
+  <text x="600" y="630" class="torq-blue wordmark" font-size="96" text-anchor="middle" letter-spacing="6">TECH NEWS</text>
 </svg>
