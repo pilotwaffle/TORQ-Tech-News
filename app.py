@@ -326,6 +326,11 @@ def serve_data_cache():
     """Serve data cache for client-side rendering"""
     return send_from_directory(DB_DIR, 'data_cache.json')
 
+@app.route('/torq-logo.svg')
+def serve_logo():
+    """Serve TORQ logo"""
+    return send_from_directory('.', 'torq-logo.svg')
+
 @app.route('/article/<slug>')
 def article_detail(slug):
     """Full article page - redirects to external MIT Sloan articles or generates content"""

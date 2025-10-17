@@ -39,4 +39,4 @@ desktop.ini
 .env.local
 
 # Cache
-data_cache.json
+# data_cache.json - Commented out so Railway has initial data

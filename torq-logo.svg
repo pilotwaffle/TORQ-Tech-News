@@ -1,0 +1,16 @@
+<svg width="200" height="120" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- TORQ Logo -->
+  <!-- Red T symbol -->
+  <g transform="translate(40, 15)">
+    <!-- Horizontal top bar -->
+    <polygon points="0,0 120,0 120,30 90,30 90,80 30,80 30,30 0,30" fill="#D32F2F"/>
+    <!-- Vertical bar -->
+    <rect x="45" y="30" width="30" height="50" fill="#D32F2F"/>
+  </g>
+
+  <!-- TORQ Text -->
+  <text x="10" y="108" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#D32F2F">TORQ</text>
+
+  <!-- TECH NEWS Text -->
+  <text x="10" y="125" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#1565C0">TECH NEWS</text>
+</svg>
