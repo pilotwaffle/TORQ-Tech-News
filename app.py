@@ -592,13 +592,15 @@ def manual_update():
     """Manual trigger for content update"""
     try:
         print("[MANUAL] Manual update triggered")
-        import automation_agent
-        agent = automation_agent.ContentAgent()
-        result = agent.run()
+        import multi_source_aggregator
+        aggregator = multi_source_aggregator.MultiSourceAggregator()
+        result = aggregator.fetch_all_articles()
 
         return jsonify({
             "status": "success",
-            "message": "Content updated successfully",
+            "message": "Content updated successfully from multiple sources",
+            "sources": result.get('sources_used', []),
+            "article_count": len(result.get('articles', [])),
             "timestamp": datetime.now().isoformat()
         })
     except Exception as e:
@@ -618,10 +620,10 @@ def auto_update_content():
         """Run the content update"""
         try:
             print("[AUTO] Running scheduled content update...")
-            import automation_agent
-            agent = automation_agent.ContentAgent()
-            agent.run()
-            print("[AUTO] Content updated successfully")
+            import multi_source_aggregator
+            aggregator = multi_source_aggregator.MultiSourceAggregator()
+            aggregator.fetch_all_articles()
+            print("[AUTO] Content updated successfully from multiple sources")
         except Exception as e:
             print(f"[AUTO] Error in auto-update: {e}")
 

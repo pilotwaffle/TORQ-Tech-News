@@ -1,88 +1,68 @@
 {
-  "timestamp": "2025-10-16T18:42:34.924747",
+  "timestamp": "2025-10-16T20:00:07.198273",
   "featured": {
-    "title": "The Future of Digital Transformation in Enterprise",
-    "excerpt": "How leading organizations are leveraging emerging technologies to create sustainable competitive advantages in an increasingly digital world.",
+    "title": "America's Semiconductor Boom is Real [video]",
+    "excerpt": "Popular on Hacker News with 40 points",
     "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
-    "category": "Strategy",
-    "author": "Dr. Sarah Chen",
-    "author_title": "Professor of Management",
-    "date": "December 15, 2024",
-    "reading_time": 12,
-    "link": "#"
+    "category": "Technology",
+    "author": "zdw",
+    "date": "October 16, 2025",
+    "reading_time": 5,
+    "link": "https://www.youtube.com/watch?v=T-jt3qBzJ4A",
+    "source": "Hacker News",
+    "author_title": "Tech Analyst"
   },
   "articles": [
     {
-      "title": "AI & Machine Learning",
-      "excerpt": "Robert C. Pozen and Renee Fry",
-      "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop",
-      "category": "Data & AI",
-      "author": "Robert C. Pozen and Renee Fry",
-      "date": "2025-10-15T07:00:18-04:00",
-      "reading_time": 9,
-      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/"
-    },
-    {
-      "title": "AI & Machine Learning",
-      "excerpt": "Sam Ransbotham",
-      "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop",
-      "category": "Data & AI",
-      "author": "Sam Ransbotham",
-      "date": "2025-10-14T07:00:14-04:00",
-      "reading_time": 11,
-      "link": "https://sloanreview.mit.edu/audio/never-fight-a-megatrend-ciscos-jeetu-patel/"
-    },
-    {
-      "title": "AI & Machine Learning",
-      "excerpt": "Leslie Brokaw",
-      "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop",
-      "category": "Data & AI",
-      "author": "Leslie Brokaw",
-      "date": "2025-10-07T07:00:11-04:00",
-      "reading_time": 11,
-      "link": "https://sloanreview.mit.edu/article/cut-through-genai-confusion-eight-definitive-reads/"
-    },
-    {
-      "title": "All Topics",
-      "excerpt": "Discover insights and strategies from leading business researchers.",
-      "image": "https://images.unsplash.com/photo-1542744094-3a31f272c490?w=800&h=600&fit=crop",
+      "title": "America's Semiconductor Boom is Real [video]",
+      "excerpt": "Popular on Hacker News with 40 points",
+      "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
       "category": "Technology",
-      "author": "Dr. Emma Anderson",
+      "author": "zdw",
       "date": "October 16, 2025",
-      "reading_time": 13,
-      "link": "https://sloanreview.mit.edu/topic/data-ai-machine-learning/"
+      "reading_time": 5,
+      "link": "https://www.youtube.com/watch?v=T-jt3qBzJ4A",
+      "source": "Hacker News",
+      "author_title": "Tech Analyst"
+    },
+    {
+      "title": "AI & Machine Learning",
+      "excerpt": "Business strategy insights from MIT Sloan School of Management",
+      "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
+      "category": "Leadership",
+      "author": "MIT Sloan Review",
+      "date": "October 16, 2025",
+      "reading_time": 10,
+      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/",
+      "source": "MIT Sloan"
+    },
+    {
+      "title": "How I bypassed Amazon's Kindle web DRM",
+      "excerpt": "Popular on Hacker News with 465 points",
+      "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
+      "category": "Technology",
+      "author": "pixelmelt",
+      "date": "October 16, 2025",
+      "reading_time": 5,
+      "link": "https://blog.pixelmelt.dev/kindle-web-drm/",
+      "source": "Hacker News"
     }
   ],
   "ai_ml_articles": [
     {
       "title": "AI & Machine Learning",
-      "excerpt": "Robert C. Pozen and Renee Fry",
-      "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop",
-      "category": "Data & AI",
-      "author": "Robert C. Pozen and Renee Fry",
-      "date": "2025-10-15T07:00:18-04:00",
-      "reading_time": 9,
-      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/"
-    },
-    {
-      "title": "AI & Machine Learning",
-      "excerpt": "Sam Ransbotham",
-      "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop",
-      "category": "Data & AI",
-      "author": "Sam Ransbotham",
-      "date": "2025-10-14T07:00:14-04:00",
-      "reading_time": 11,
-      "link": "https://sloanreview.mit.edu/audio/never-fight-a-megatrend-ciscos-jeetu-patel/"
-    },
-    {
-      "title": "AI & Machine Learning",
-      "excerpt": "Leslie Brokaw",
-      "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop",
-      "category": "Data & AI",
-      "author": "Leslie Brokaw",
-      "date": "2025-10-07T07:00:11-04:00",
-      "reading_time": 11,
-      "link": "https://sloanreview.mit.edu/article/cut-through-genai-confusion-eight-definitive-reads/"
+      "excerpt": "Business strategy insights from MIT Sloan School of Management",
+      "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
+      "category": "Leadership",
+      "author": "MIT Sloan Review",
+      "date": "October 16, 2025",
+      "reading_time": 10,
+      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/",
+      "source": "MIT Sloan"
     }
+  ],
+  "sources_used": [
+    "MIT Sloan",
+    "Hacker News"
   ]
 }
