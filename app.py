@@ -329,7 +329,7 @@ def serve_data_cache():
 @app.route('/torq-logo.svg')
 def serve_logo():
     """Serve TORQ logo"""
-    return send_from_directory('.', 'torq-logo.svg')
+    return send_from_directory(DB_DIR, 'torq-logo.svg')
 
 @app.route('/article/<slug>')
 def article_detail(slug):
