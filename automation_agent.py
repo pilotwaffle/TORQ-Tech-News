@@ -30,6 +30,7 @@ class ContentAgent:
 
         # MIT Sloan Review website
         self.source_url = "https://sloanreview.mit.edu"
+        self.all_topics_url = "https://sloanreview.mit.edu/all-topics/"
         self.ai_ml_url = "https://sloanreview.mit.edu/topic/data-ai-machine-learning/"
 
         # Categories mapping
@@ -45,39 +46,63 @@ class ContentAgent:
 
     def fetch_articles(self, limit: int = 6) -> List[Dict]:
         """
-        Fetch real articles from MIT Sloan Review
+        Fetch real articles from MIT Sloan Review various topics
         """
         print("[*] Fetching articles from MIT Sloan Review...")
 
         articles = []
 
+        # List of topic URLs to fetch from
+        topic_urls = [
+            "https://sloanreview.mit.edu/topic/strategy/",
+            "https://sloanreview.mit.edu/topic/innovation-3/",
+            "https://sloanreview.mit.edu/topic/leadership/",
+            "https://sloanreview.mit.edu/topic/social-responsibility/",
+            "https://sloanreview.mit.edu/topic/operations/",
+            "https://sloanreview.mit.edu/topic/marketing/"
+        ]
+
         try:
-            # Fetch the main page
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
-            response = requests.get(f"{self.source_url}/articles/", headers=headers, timeout=10)
-            response.raise_for_status()
 
-            soup = BeautifulSoup(response.content, 'html.parser')
+            # Fetch articles from multiple topics
+            for topic_url in topic_urls:
+                if len(articles) >= limit:
+                    break
 
-            # Find article cards
-            article_elements = soup.find_all('article', limit=limit * 2)  # Get extra in case some fail
-
-            for idx, article_elem in enumerate(article_elements[:limit]):
                 try:
-                    article = self._parse_article(article_elem)
-                    if article:
-                        articles.append(article)
-                        print(f"  [OK] Fetched: {article['title'][:50]}...")
+                    response = requests.get(topic_url, headers=headers, timeout=10)
+                    response.raise_for_status()
+                    soup = BeautifulSoup(response.content, 'html.parser')
+
+                    # Find article cards
+                    article_elements = soup.find_all('article', limit=3)
+
+                    for article_elem in article_elements:
+                        if len(articles) >= limit:
+                            break
+                        try:
+                            article = self._parse_article(article_elem)
+                            if article:
+                                articles.append(article)
+                                print(f"  [OK] Fetched: {article['title'][:50]}...")
+                        except Exception as e:
+                            continue
+
                 except Exception as e:
-                    print(f"  [WARN] Error parsing article {idx}: {e}")
+                    print(f"  [WARN] Error fetching from {topic_url}: {e}")
                     continue
 
         except Exception as e:
             print(f"[ERROR] Error fetching articles: {e}")
-            print("[INFO] Using fallback data...")
-            articles = self._generate_fallback_articles(limit)
+
+        # If we didn't get enough, use fallback
+        if len(articles) < limit:
+            print("[INFO] Using fallback data to fill remaining slots...")
+            fallback = self._generate_fallback_articles(limit - len(articles))
+            articles.extend(fallback)
 
         return articles[:limit]
 
