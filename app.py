@@ -754,6 +754,70 @@ def manual_update():
             "timestamp": datetime.now().isoformat()
         }), 500
 
+@app.route('/health')
+@app.route('/api/health')
+def health_check():
+    """System health check endpoint for monitoring and n8n workflows"""
+    try:
+        # Check if data_cache.json exists and is valid
+        with open(DATA_CACHE_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        article_count = len(data.get('articles', []))
+        last_update = data.get('timestamp', 'Unknown')
+        sources_used = data.get('sources_used', [])
+
+        # Check database connectivity
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('SELECT COUNT(*) FROM visitors')
+        total_visitors = c.fetchone()[0]
+        conn.close()
+
+        return jsonify({
+            'status': 'healthy',
+            'version': '1.0.0',
+            'service': 'TORQ Tech News',
+            'timestamp': datetime.now().isoformat(),
+            'data': {
+                'article_count': article_count,
+                'last_update': last_update,
+                'sources': sources_used,
+                'total_visitors': total_visitors
+            },
+            'components': {
+                'database': 'operational',
+                'cache': 'operational',
+                'aggregator': 'operational'
+            }
+        }), 200
+    except FileNotFoundError:
+        return jsonify({
+            'status': 'degraded',
+            'version': '1.0.0',
+            'service': 'TORQ Tech News',
+            'timestamp': datetime.now().isoformat(),
+            'error': 'Data cache not found',
+            'components': {
+                'database': 'operational',
+                'cache': 'missing',
+                'aggregator': 'unknown'
+            }
+        }), 503
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'version': '1.0.0',
+            'service': 'TORQ Tech News',
+            'timestamp': datetime.now().isoformat(),
+            'error': str(e),
+            'components': {
+                'database': 'unknown',
+                'cache': 'error',
+                'aggregator': 'unknown'
+            }
+        }), 500
+
 # Automation background task
 def auto_update_content():
     """Background task to update content every 5 hours"""
