@@ -12,6 +12,8 @@ A beautiful, responsive landing page inspired by MIT Sloan Management Review wit
 ✅ **Smooth Animations** - Hover effects and scroll animations
 ✅ **Mobile Menu** - Hamburger menu for small screens
 ✅ **Data Caching** - Fast subsequent loads
+✅ **Advanced Analytics** - Comprehensive visitor tracking and reporting
+✅ **Analytics Tool** - Command-line tool for data analysis and insights
 
 ---
 
@@ -22,9 +24,16 @@ E:\sloan-review-landing\
 ├── index.html              - Main landing page
 ├── styles.css              - Professional CSS styling (1000+ lines)
 ├── script.js               - Interactive JavaScript
+├── app.py                  - Flask web application with analytics
 ├── automation_agent.py     - Intelligent content agent
+├── multi_source_aggregator.py - Multi-source news aggregator
+├── analyze_data.py         - Analytics analysis tool (NEW!)
+├── test_analyze.py         - Test script for analyzer
+├── analytics.js            - Client-side analytics tracking
 ├── data_cache.json         - Cached article data
+├── analytics.db            - SQLite analytics database
 ├── run_automation.bat      - Easy automation runner
+├── ANALYTICS_TOOL_README.md - Analytics tool documentation (NEW!)
 └── README.md              - This file
 ```
 
@@ -238,6 +247,47 @@ taskkill /PID <process_id> /F
    ↓
 7. Success! Refresh browser to see changes
 ```
+
+---
+
+## 📊 Analytics & Data Analysis
+
+### Analytics Tool
+
+The project includes a powerful command-line analytics tool (`analyze_data.py`) that provides comprehensive insights into visitor behavior, content performance, and user engagement.
+
+**Quick Start:**
+```bash
+# Generate analytics report for last 7 days
+python analyze_data.py
+
+# Generate report for last 30 days
+python analyze_data.py --days 30
+
+# Export report to JSON
+python analyze_data.py --export report.json
+```
+
+**Features:**
+- ✅ Visitor statistics (unique visitors, page views, bounce rate)
+- ✅ Top articles by views
+- ✅ Traffic sources and referrers
+- ✅ Device and browser breakdown
+- ✅ Conversion funnel analysis
+- ✅ User engagement metrics
+- ✅ Hourly activity patterns
+- ✅ Recent activity log
+- ✅ JSON export for dashboards
+
+**Documentation:**
+See [ANALYTICS_TOOL_README.md](ANALYTICS_TOOL_README.md) for complete documentation.
+
+**Test the Tool:**
+```bash
+python test_analyze.py
+```
+
+This creates a test database with sample data and generates a demo report.
 
 ---
 
