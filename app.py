@@ -1212,13 +1212,16 @@ if __name__ == '__main__':
     # Start background automation
     start_background_automation()
 
+    
+    port = int(os.environ.get('PORT', 5000))
+    
     print()
     print("="*60)
-    print("[SUCCESS] Server starting on http://localhost:5000")
-    print("[INFO] Admin Dashboard: http://localhost:5000/admin")
-    print("[INFO] API Analytics: http://localhost:5000/api/analytics")
-    print("[INFO] Advanced Analytics: http://localhost:5000/api/analytics/advanced")
+    print(f"[SUCCESS] Server starting on http://localhost:{port}")
+    print(f"[INFO] Admin Dashboard: http://localhost:{port}/admin")
+    print(f"[INFO] API Analytics: http://localhost:{port}/api/analytics")
+    print(f"[INFO] Advanced Analytics: http://localhost:{port}/api/analytics/advanced")
     print("="*60)
     print()
-
-    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
