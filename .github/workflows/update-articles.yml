@@ -1,0 +1,23 @@
+name: Update Articles Content
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-content:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install requests beautifulsoup4 lxml
+      - run: python automation_agent.py
+      - run: |
+          git config user.email "bot@github.com"
+          git config user.name "Bot"
+          git add index.html data_cache.json
+          git diff --quiet || git commit -m "Update articles"
+          git push
