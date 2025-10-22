@@ -11,10 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Expose the port Flask runs on
-EXPOSE 5000
+# Railway automatically sets the PORT environment variable
+# The app.py already reads from os.environ.get('PORT', 5000)
+# No need to EXPOSE a specific port - Railway handles this dynamically
 
-# Set environment variable for Flask
+# Set environment variables for Flask
 ENV FLASK_APP=app.py
 ENV PYTHONUNBUFFERED=1
 
