@@ -3,3 +3,4 @@ beautifulsoup4==4.12.2
 requests==2.31.0
 schedule==1.2.2
 user-agents==2.2.0
+newspaper3k
