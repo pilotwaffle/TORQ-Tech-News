@@ -1,250 +1,214 @@
-# TORQ Tech News - Deployment Guide
+# TORQ Tech News - Production Deployment Guide
 
-## ✅ GitHub Repository
-**Repository**: https://github.com/pilotwaffle/TOTQ-Tech-News
+## ✅ Production-Ready Configuration
 
-All code successfully pushed with 3 commits:
-1. Initial commit with full AI/ML integration
-2. Added requirements.txt
-3. Added Vercel deployment configuration
+This application is configured for production deployment on Railway with the following optimizations:
 
-## 📦 What's Included
+### 🚀 Production WSGI Server
 
-### Core Files
-- `app.py` - Flask application (536 lines)
-- `automation_agent.py` - Content automation (407 lines)
-- `index.html` - Homepage (582 lines)
-- `styles.css` - MIT Sloan styling (1000+ lines)
-- `script.js` - Interactive features
-- `make_articles_clickable.js` - Article routing
-- `populate_ai_section.js` - AI section population
-
-### Configuration
-- `requirements.txt` - Python dependencies
-- `vercel.json` - Vercel deployment config
-- `.gitignore` - Git exclusions
-- `run.bat` - One-click Windows launcher
-
-### Documentation
-- `README.md` - Project overview
-- `QUICK_START.md` - Quick reference
-- `AI_ML_INTEGRATION_SUMMARY.md` - Feature documentation
-- `MIT_SLOAN_DESIGN_REFERENCE.md` - Design specs
-- `SYSTEM_STATUS.md` - System overview
-- `DEPLOYMENT.md` - This file
-
-### Admin
-- `admin_dashboard.html` - Analytics dashboard
-
-## 🚀 Vercel Deployment
-
-### Option 1: Vercel CLI
-```bash
-npm i -g vercel
-cd E:\sloan-review-landing
-vercel
-```
-
-### Option 2: Vercel Dashboard
-1. Go to https://vercel.com/new
-2. Import from GitHub: `pilotwaffle/TOTQ-Tech-News`
-3. Configure:
-   - Framework Preset: Other
-   - Build Command: (leave empty)
-   - Output Directory: (leave empty)
-4. Click "Deploy"
-
-### Important Notes for Vercel
-⚠️ **Scheduler Limitation**: Vercel is serverless, so the `schedule` library won't work as intended. You have two options:
-
-**Option A: Use Vercel Cron Jobs**
-1. Create `vercel.json` with cron configuration:
-```json
-{
-  "crons": [
-    {
-      "path": "/api/update-content",
-      "schedule": "0 6,23 * * *"
-    }
-  ]
-}
-```
-
-2. Add endpoint in `app.py`:
-```python
-@app.route('/api/update-content')
-def api_update_content():
-    """Cron endpoint for Vercel"""
-    import automation_agent
-    agent = automation_agent.ContentAgent()
-    agent.run()
-    return jsonify({"status": "success"})
-```
-
-**Option B: Deploy to a Traditional Host**
-- Railway.app
-- Render.com
-- Heroku
-- DigitalOcean App Platform
-
-These support long-running processes and the schedule library will work.
-
-## 🔧 Local Development
-
-### Prerequisites
-- Python 3.11+
-- Git
-
-### Setup
-```bash
-# Clone repository
-git clone https://github.com/pilotwaffle/TOTQ-Tech-News.git
-cd TOTQ-Tech-News
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run application
-python app.py
-
-# Or use one-click launcher (Windows)
-run.bat
-```
-
-### Access Points
-- Main Site: http://localhost:5000
-- Admin Dashboard: http://localhost:5000/admin
-- Analytics API: http://localhost:5000/api/analytics
-
-## 📊 Features
-
-### ✅ Implemented
-- [x] AI/ML content from MIT Sloan Review
-- [x] Scheduled updates (6AM & 11PM)
-- [x] Dedicated AI/ML section
-- [x] Visitor tracking & analytics
-- [x] Admin dashboard
-- [x] Full article generation
-- [x] Clickable article cards
-- [x] MIT Sloan design theme
-- [x] Responsive design
-- [x] Background automation
-- [x] SQLite database
-- [x] Content caching
-
-### 🔄 Scheduled Updates
-**Current**: Daily at 6:00 AM and 11:00 PM
-**Content**: 3 AI/ML articles + 3 general articles
-
-### 📈 Analytics Tracked
-- Unique visitors (24 hours)
-- Total page views
-- Top articles by views
-- Recent activity feed
-- Article engagement
-
-## 🎨 Design
-
-**Color Scheme**:
-- Primary: #005b9c (MIT Sloan Blue)
-- AI Section: #0097A7 (Cyan)
-- Accent: #00e0ff
-- Alert: #ed1b2e
-
-**Typography**:
-- Font: Inter (Google Fonts)
-- Body: 1.125rem (18px)
-- Headers: 800 weight
-
-**Layout**:
-- Container: 1500px max-width
-- Header: 92px fixed
-- Responsive breakpoints: 768px, 480px
-
-## 🔐 Security
-
-**Privacy Features**:
-- IP hashing (SHA256)
-- No personal data collection
-- Session-based tracking only
-
-**Database**:
-- SQLite (gitignored)
-- No sensitive data stored
-
-## 📝 Git Workflow
+**Gunicorn** with gevent worker class for high-performance async handling:
 
 ```bash
-# Make changes
-git add .
-git commit -m "feat: Your feature description"
-git push
-
-# Or use the commit template
-git commit -m "$(cat <<'EOF'
-feat: Your feature title
-
-Detailed description of changes
-
-🤖 Generated with Claude Code
-https://claude.com/claude-code
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-EOF
-)"
+gunicorn --bind 0.0.0.0:$PORT \
+  --workers 4 \
+  --threads 2 \
+  --worker-class gevent \
+  --timeout 120 \
+  --access-logfile - \
+  --error-logfile - \
+  app:app
 ```
 
-## 🐛 Troubleshooting
-
-### Port 5000 in use?
-```bash
-# Windows
-netstat -ano | findstr :5000
-taskkill /F /PID [process_id]
-
-# Or just use run.bat (auto-kills old processes)
-```
-
-### Images not loading?
-- Hard refresh: Ctrl + Shift + R
-- Check data_cache.json for valid URLs
-- Run automation_agent.py manually
-
-### Articles not clickable?
-- Hard refresh to clear cache
-- Check browser console (F12) for errors
-- Verify make_articles_clickable.js is loading
-
-### Database locked?
-- Close all instances of app.py
-- Delete analytics.db (will be recreated)
-
-## 📦 Dependencies
-
-```
-Flask==3.0.0          # Web framework
-beautifulsoup4==4.12.2  # Web scraping
-requests==2.31.0      # HTTP library
-schedule==1.2.2       # Task scheduling
-```
-
-## 🌐 Environment Variables
-
-None required! All configuration is hardcoded for simplicity.
-
-## 📞 Support
-
-**Repository**: https://github.com/pilotwaffle/TOTQ-Tech-News
-**Issues**: https://github.com/pilotwaffle/TOTQ-Tech-News/issues
-
-## 📄 License
-
-MIT License - Feel free to use and modify!
+**Configuration Details:**
+- **Workers:** 4 (optimal for Railway's standard instance)
+- **Threads:** 2 per worker
+- **Worker Class:** gevent (async I/O for content scraping)
+- **Timeout:** 120 seconds (handles long-running content extraction)
+- **Logging:** stdout/stderr for Railway log integration
 
 ---
 
-**Last Updated**: October 16, 2025
-**Status**: ✅ Production Ready
-**Version**: 1.0.0
+## 📦 Deployment Files
 
-🤖 Generated with Claude Code
+### `requirements.txt`
+Production dependencies including:
+- Flask 3.0.0
+- Gunicorn 21.2.0 (production WSGI server)
+- gevent 24.2.1 (async worker)
+- beautifulsoup4, requests (content scraping)
+- newspaper3k (article extraction)
+
+### `railway.toml`
+Railway-specific configuration:
+- Builder: Dockerfile
+- Start Command: Gunicorn with production settings
+
+### `Procfile`
+Alternative process definition (Railway uses railway.toml by default):
+```
+web: gunicorn ... app:app
+```
+
+### `Dockerfile`
+Optimized Docker build:
+- Base: python:3.11-slim
+- Dynamic PORT binding (Railway assigns automatically)
+- Environment variables for Flask production mode
+
+---
+
+## 🔧 Railway Environment Variables
+
+Set these in your Railway dashboard:
+
+**Required:**
+- `PORT` - Automatically set by Railway (do not override)
+- `FLASK_ENV=production`
+- `PYTHONUNBUFFERED=1`
+
+**Optional:**
+- `AUTO_UPDATE_INTERVAL` - Content update frequency (default: 5 hours)
+- API keys for premium content sources
+
+---
+
+## 📊 Features
+
+### Endpoints
+- `/` - Main application
+- `/admin` - Admin dashboard
+- `/api/analytics` - Analytics API
+- `/api/analytics/advanced` - Advanced analytics
+
+### Content Sources
+- TechCrunch
+- MIT Technology Review
+- Hacker News
+- MIT Sloan Review
+
+### Auto-Update
+- Background thread runs every 5 hours
+- Scrapes and extracts full article content
+- Caches results in `data_cache.json`
+- Advanced analytics in SQLite database
+
+---
+
+## ⚠️ Production Considerations
+
+### Database
+Currently using **SQLite** (`analytics.db`):
+- ✅ Simple, no external dependencies
+- ⚠️ Ephemeral in Docker (resets on redeploy)
+- 💡 **Recommendation:** Upgrade to Railway PostgreSQL for persistence
+
+### Storage
+- `data_cache.json` - Content cache (ephemeral)
+- **Solution:** Mount Railway volume or use external storage (S3, Railway Volume)
+
+### Scaling
+- Current: 4 workers, handles moderate traffic
+- For high traffic: Increase workers or horizontal scaling
+
+---
+
+## 🚀 Deployment Workflow
+
+1. **Push to GitHub:**
+   ```bash
+   git push origin main
+   ```
+
+2. **Railway Auto-Deploy:**
+   - Detects changes
+   - Builds Docker image
+   - Deploys with Gunicorn
+   - Assigns public URL
+
+3. **Monitor Logs:**
+   ```bash
+   railway logs
+   ```
+
+4. **Check Health:**
+   - Visit deployment URL
+   - Check `/api/analytics` endpoint
+   - Verify content aggregation running
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Port Binding:**
+- Ensure app.py uses: `port = int(os.environ.get('PORT', 5000))`
+- Railway sets PORT dynamically
+
+**Worker Timeout:**
+- Content scraping can take time
+- Timeout set to 120s to accommodate
+
+**Memory Limits:**
+- 4 workers + gevent = ~512MB usage
+- Railway standard instances have sufficient memory
+
+**Database Resets:**
+- SQLite resets on redeploy
+- Upgrade to PostgreSQL for persistence
+
+---
+
+## 📈 Performance Metrics
+
+**Expected Performance:**
+- Concurrent Requests: 50-100 (with gevent)
+- Response Time: <500ms (cached content)
+- Content Update: Every 5 hours (background)
+- Memory Usage: ~512MB
+- CPU Usage: Low (async I/O)
+
+---
+
+## 🔐 Security Best Practices
+
+✅ Production WSGI server (Gunicorn)
+✅ Environment variables for sensitive data
+✅ No hardcoded credentials
+✅ Debug mode disabled in production
+✅ HTTPS via Railway (automatic)
+
+---
+
+## 📝 Maintenance
+
+### Update Dependencies
+```bash
+pip list --outdated
+pip install --upgrade [package]
+```
+
+### Database Migrations
+Currently manual - consider adding Flask-Migrate for schema changes
+
+### Log Monitoring
+Use Railway dashboard or CLI:
+```bash
+railway logs --tail 100
+```
+
+---
+
+## 🎯 Future Enhancements
+
+- [ ] PostgreSQL migration for data persistence
+- [ ] Redis caching for improved performance
+- [ ] Celery for distributed background tasks
+- [ ] API rate limiting
+- [ ] Authentication for admin endpoints
+- [ ] Prometheus metrics export
+- [ ] Health check endpoint
+
+---
+
+**Deployed with ❤️ using Railway**
