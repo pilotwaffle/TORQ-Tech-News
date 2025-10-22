@@ -212,3 +212,60 @@ railway logs --tail 100
 ---
 
 **Deployed with ❤️ using Railway**
+
+---
+
+## 🌐 Railway Private Networking Optimization
+
+### IPv6 Dual-Stack Binding
+
+The application is configured with Railway's recommended IPv6 binding:
+
+```bash
+gunicorn --bind [::]:$PORT
+```
+
+**Benefits:**
+- ✅ **Dual-stack support:** Accepts both IPv4 (public) and IPv6 (private network)
+- ✅ **Private networking ready:** Compatible with Railway's internal service mesh
+- ✅ **Future-proof:** Prepared for microservices architecture
+- ✅ **Railway best practice:** Aligns with official documentation
+
+### Private Networking Status
+
+**Current Architecture:** Single-service deployment
+- Public domain: `torqtechnews.com` and `www.torqtechnews.com`
+- Railway internal domain: `[service-name].railway.internal` (available but not used)
+
+**Private networking is enabled by default** on all Railway projects but currently not utilized since this is a single-service deployment.
+
+### Future Microservices Architecture
+
+When scaling to multiple services, private networking enables secure service-to-service communication:
+
+```
+Frontend (Public) → API (Private) → Database (Private)
+  torqtechnews.com     api.railway.internal     postgres.railway.internal
+```
+
+**Configuration for future services:**
+```bash
+# Frontend environment variables
+BACKEND_URL=http://${{api.RAILWAY_PRIVATE_DOMAIN}}:${{api.PORT}}
+
+# API environment variables  
+DATABASE_URL=${{postgres.DATABASE_URL}}
+```
+
+### DNS Configuration
+
+Custom domain configured via Namecheap:
+- **Root domain:** CNAME @ → `web-production-e23a.up.railway.app`
+- **WWW subdomain:** CNAME www → `web-production-e23a.up.railway.app`
+- **TTL:** 30 minutes (automatic for root, 30min for www)
+
+---
+
+**Last Updated:** 2025-10-22
+**IPv6 Optimization:** Implemented
+**Private Networking:** Ready for future use
