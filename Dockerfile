@@ -8,14 +8,15 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy application files
 COPY . .
-COPY start.sh .
-RUN chmod +x start.sh
 
-# Set environment variables for Flask
+# Set environment variables
 ENV FLASK_APP=app.py
 ENV PYTHONUNBUFFERED=1
 
-# Use startup script that properly handles PORT variable
-CMD ["./start.sh"]
+# Make startup script executable
+RUN chmod +x railway_start.py
+
+# Use Python script that forces Gunicorn execution
+CMD ["python", "railway_start.py"]
