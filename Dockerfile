@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Cache buster - force rebuild
+ENV REBUILD_TIMESTAMP=2025-10-22-19-50
+
 WORKDIR /app
 
 # Copy requirements first for better caching
