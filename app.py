@@ -689,6 +689,54 @@ def serve_logo():
     """Serve TORQ logo"""
     return send_from_directory(DB_DIR, 'torq-logo.svg')
 
+
+@app.route('/topics/<topic>')
+def topic_page(topic):
+    """Display articles filtered by topic/category"""
+    session_id = track_visitor(f'/topics/{topic}')
+
+    # Load articles from cache
+    try:
+        with open(DATA_CACHE_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            all_articles = data.get('articles', [])
+    except Exception as e:
+        print(f"[ERROR] Failed to load cache: {e}")
+        all_articles = []
+
+    # Topic mapping
+    topic_map = {
+        'innovation': 'Innovation',
+        'leadership': 'Leadership',
+        'strategy': 'Strategy',
+        'sustainability': 'Sustainability',
+        'technology': 'Technology',
+        'operations': 'Operations'
+    }
+
+    display_topic = topic_map.get(topic.lower(), topic.title())
+
+    # Filter articles by category
+    filtered_articles = [
+        a for a in all_articles
+        if display_topic.lower() in a.get('category', '').lower()
+    ]
+
+    # Fallback: if no exact category match, search in title/excerpt
+    if not filtered_articles:
+        filtered_articles = [
+            a for a in all_articles
+            if (display_topic.lower() in a.get('title', '').lower() or
+                display_topic.lower() in a.get('excerpt', '').lower())
+        ]
+
+    return render_template('topic.html',
+                         topic=display_topic,
+                         articles=filtered_articles,
+                         count=len(filtered_articles),
+                         session_id=session_id)
+
+
 @app.route('/article/<slug>')
 def article_detail(slug):
     """Full article page - displays extracted content on-site with source attribution"""

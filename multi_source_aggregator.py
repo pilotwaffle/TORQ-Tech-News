@@ -204,6 +204,7 @@ class MultiSourceAggregator:
                             'date': datetime.now().strftime("%B %d, %Y"),
                             'reading_time': random.randint(5, 10),
                             'link': url,
+                            'slug': self._extract_slug(url, title),
                             'source': 'Hacker News'
                         })
                         print(f"  [OK] Hacker News: {title[:50]}...")

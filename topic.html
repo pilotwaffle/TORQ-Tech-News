@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{{ topic }} - TORQ Tech News</title>
+    <meta content="Explore {{ topic }} articles and insights from TORQ Tech News" name="description"/>
+    <link href="/styles.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <div class="nav-brand">
+                <a href="/">
+                    <img alt="TORQ Tech News" src="/torq-logo.svg" style="height: 60px; width: auto;"/>
+                </a>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/#articles">Articles</a></li>
+                <li><a href="/#topics">Topics</a></li>
+                <li><a href="/#research">Research</a></li>
+                <li><a href="/#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Topic Page Content -->
+    <main class="container" style="padding-top: 120px; padding-bottom: 60px;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <!-- Topic Header -->
+            <div style="margin-bottom: 48px;">
+                <h1 style="font-size: 2.5rem; font-weight: 700; color: #111827; margin-bottom: 12px;">
+                    {{ topic }}
+                </h1>
+                <p style="font-size: 1.125rem; color: #6b7280;">
+                    {{ count }} article{% if count != 1 %}s{% endif %} found in this topic
+                </p>
+            </div>
+
+            <!-- Articles Grid -->
+            {% if articles %}
+            <div class="articles-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 32px;">
+                {% for article in articles %}
+                <article class="article-card" data-slug="{{ article.slug }}" style="cursor: pointer; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;">
+                    <img src="{{ article.image }}" alt="{{ article.title }}" style="width: 100%; height: 200px; object-fit: cover;">
+                    <div style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 0.875rem; color: #6b7280;">
+                            <span class="article-category">{{ article.category }}</span>
+                            <span>•</span>
+                            <span>{{ article.reading_time }} min read</span>
+                        </div>
+                        <h3 class="article-title" style="font-size: 1.25rem; font-weight: 600; color: #111827; margin-bottom: 8px; line-height: 1.4;">
+                            {{ article.title }}
+                        </h3>
+                        <p style="color: #6b7280; font-size: 0.9375rem; line-height: 1.6; margin-bottom: 16px;">
+                            {{ article.excerpt }}
+                        </p>
+                        <div style="display: flex; align-items: center; justify-content: space-between; color: #9ca3af; font-size: 0.875rem;">
+                            <span>{{ article.author }}</span>
+                            <span>{{ article.date }}</span>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 60px 20px; background: #f9fafb; border-radius: 12px;">
+                <h2 style="font-size: 1.5rem; font-weight: 600; color: #111827; margin-bottom: 12px;">
+                    No Articles Found
+                </h2>
+                <p style="color: #6b7280; margin-bottom: 24px;">
+                    We couldn't find any articles in the {{ topic }} category yet. Check back soon!
+                </p>
+                <a href="/" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
+                    Browse All Articles
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img alt="TORQ Tech News" src="/torq-logo.svg" style="height: 50px; margin-bottom: 16px;"/>
+                    <p style="color: #9ca3af; max-width: 300px;">Leading business and technology insights for tech leaders and innovators.</p>
+                </div>
+                <div class="footer-links">
+                    <div>
+                        <h4>Topics</h4>
+                        <ul>
+                            <li><a href="/topics/innovation">Innovation</a></li>
+                            <li><a href="/topics/leadership">Leadership</a></li>
+                            <li><a href="/topics/strategy">Strategy</a></li>
+                            <li><a href="/topics/sustainability">Sustainability</a></li>
+                            <li><a href="/topics/technology">Technology</a></li>
+                            <li><a href="/topics/operations">Operations</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="/#about">About</a></li>
+                            <li><a href="/contact">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TORQ Tech News. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Make articles clickable -->
+    <script src="/make_articles_clickable.js"></script>
+
+    <style>
+    .article-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    </style>
+</body>
+</html>
