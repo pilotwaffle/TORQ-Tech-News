@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-10-22T14:40:26.168413",
+  "timestamp": "2025-10-22T20:51:07.348639",
   "featured": {
     "title": "The Future of Digital Transformation in Enterprise",
     "excerpt": "How leading organizations are leveraging emerging technologies to create sustainable competitive advantages in an increasingly digital world.",
@@ -20,7 +20,8 @@
       "author": "Ravikiran Kalluri",
       "date": "2025-10-20T07:00:17-04:00",
       "reading_time": 7,
-      "link": "https://sloanreview.mit.edu/article/whats-your-edge-rethinking-expertise-in-the-age-of-ai/"
+      "link": "https://sloanreview.mit.edu/article/whats-your-edge-rethinking-expertise-in-the-age-of-ai/",
+      "slug": "whats-your-edge-rethinking-expertise-in-the-age-of-ai"
     },
     {
       "title": "AI & Machine Learning",
@@ -30,7 +31,8 @@
       "author": "Robert C. Pozen and Renee Fry",
       "date": "2025-10-15T07:00:18-04:00",
       "reading_time": 10,
-      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/"
+      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/",
+      "slug": "for-ai-productivity-gains-let-team-leaders-write-the-rules"
     },
     {
       "title": "AI & Machine Learning",
@@ -40,7 +42,8 @@
       "author": "Sam Ransbotham",
       "date": "2025-10-14T07:00:14-04:00",
       "reading_time": 9,
-      "link": "https://sloanreview.mit.edu/audio/never-fight-a-megatrend-ciscos-jeetu-patel/"
+      "link": "https://sloanreview.mit.edu/audio/never-fight-a-megatrend-ciscos-jeetu-patel/",
+      "slug": "ai-machine-learning"
     },
     {
       "title": "New Product Development",
@@ -50,7 +53,8 @@
       "author": "Niklas Mortensen",
       "date": "2025-10-21T07:00:58-04:00",
       "reading_time": 6,
-      "link": "https://sloanreview.mit.edu/article/how-design-became-a-boardroom-bystander/"
+      "link": "https://sloanreview.mit.edu/article/how-design-became-a-boardroom-bystander/",
+      "slug": "how-design-became-a-boardroom-bystander"
     },
     {
       "title": "Sustainability",
@@ -60,7 +64,8 @@
       "author": "Ivanka Visnjic et al.",
       "date": "2025-10-15T13:00:22-04:00",
       "reading_time": 7,
-      "link": "https://sloanreview.mit.edu/article/integrate-sustainability-and-innovation-to-find-new-opportunities/"
+      "link": "https://sloanreview.mit.edu/article/integrate-sustainability-and-innovation-to-find-new-opportunities/",
+      "slug": "integrate-sustainability-and-innovation-to-find-new-opportunities"
     },
     {
       "title": "Innovation Strategy",
@@ -70,7 +75,8 @@
       "author": "Petteri Leppänen et al.",
       "date": "2025-10-06T07:00:54-04:00",
       "reading_time": 11,
-      "link": "https://sloanreview.mit.edu/article/business-model-innovation-essentials/"
+      "link": "https://sloanreview.mit.edu/article/business-model-innovation-essentials/",
+      "slug": "business-model-innovation-essentials"
     }
   ],
   "ai_ml_articles": [
@@ -82,7 +88,8 @@
       "author": "Ravikiran Kalluri",
       "date": "2025-10-20T07:00:17-04:00",
       "reading_time": 7,
-      "link": "https://sloanreview.mit.edu/article/whats-your-edge-rethinking-expertise-in-the-age-of-ai/"
+      "link": "https://sloanreview.mit.edu/article/whats-your-edge-rethinking-expertise-in-the-age-of-ai/",
+      "slug": "whats-your-edge-rethinking-expertise-in-the-age-of-ai"
     },
     {
       "title": "AI & Machine Learning",
@@ -92,7 +99,8 @@
       "author": "Robert C. Pozen and Renee Fry",
       "date": "2025-10-15T07:00:18-04:00",
       "reading_time": 10,
-      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/"
+      "link": "https://sloanreview.mit.edu/article/for-ai-productivity-gains-let-team-leaders-write-the-rules/",
+      "slug": "for-ai-productivity-gains-let-team-leaders-write-the-rules"
     },
     {
       "title": "AI & Machine Learning",
@@ -102,7 +110,8 @@
       "author": "Sam Ransbotham",
       "date": "2025-10-14T07:00:14-04:00",
       "reading_time": 9,
-      "link": "https://sloanreview.mit.edu/audio/never-fight-a-megatrend-ciscos-jeetu-patel/"
+      "link": "https://sloanreview.mit.edu/audio/never-fight-a-megatrend-ciscos-jeetu-patel/",
+      "slug": "ai-machine-learning"
     }
   ]
 }

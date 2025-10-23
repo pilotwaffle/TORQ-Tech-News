@@ -1,5 +1,6 @@
 /**
  * Make articles clickable and link to full content pages
+ * Updated to use data-slug attributes from dynamically loaded articles
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,17 +14,24 @@ document.addEventListener('DOMContentLoaded', function() {
             // Don't navigate if clicking on a link
             if (e.target.tagName === 'A') return;
 
-            // Get article title and create slug
-            const titleElement = card.querySelector('.article-title');
-            if (titleElement) {
-                const title = titleElement.textContent.trim();
-                const slug = title
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/^-+|-+$/g, '')  // Remove leading/trailing dashes
-                    .substring(0, 50);
+            // Try to get slug from data attribute first (preferred)
+            let slug = card.dataset.slug;
+            
+            // Fallback: generate slug from title if no data-slug attribute
+            if (!slug) {
+                const titleElement = card.querySelector('.article-title');
+                if (titleElement) {
+                    const title = titleElement.textContent.trim();
+                    slug = title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/^-+|-+$/g, '')  // Remove leading/trailing dashes
+                        .substring(0, 50);
+                }
+            }
 
+            if (slug) {
                 // Navigate to article page
                 window.location.href = `/article/${slug}`;
             }
@@ -35,16 +43,26 @@ document.addEventListener('DOMContentLoaded', function() {
     if (heroButton) {
         heroButton.addEventListener('click', function(e) {
             e.preventDefault();
-            const titleElement = document.querySelector('.hero-title');
-            if (titleElement) {
-                const title = titleElement.textContent.trim();
-                const slug = title
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/^-+|-+$/g, '')  // Remove leading/trailing dashes
-                    .substring(0, 50);
+            
+            // Try to get slug from hero section data attribute
+            const heroSection = document.querySelector('.hero');
+            let slug = heroSection?.dataset.slug;
+            
+            // Fallback: generate from title
+            if (!slug) {
+                const titleElement = document.querySelector('.hero-title');
+                if (titleElement) {
+                    const title = titleElement.textContent.trim();
+                    slug = title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/^-+|-+$/g, '')  // Remove leading/trailing dashes
+                        .substring(0, 50);
+                }
+            }
 
+            if (slug) {
                 window.location.href = `/article/${slug}`;
             }
         });
