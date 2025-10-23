@@ -704,18 +704,18 @@ def article_detail(slug):
         featured = {}
 
     # Check featured article first
-    if featured and normalize_slug(featured.get('title', '')) == slug:
+    if featured and featured.get('slug') == slug:
         cached_article = featured
     else:
         # Find matching article in regular articles using normalized slug
-        cached_article = next((a for a in articles if normalize_slug(a['title']) == slug), None)
+        cached_article = next((a for a in articles if a.get('slug') == slug), None)
 
     # If still not found, try fuzzy matching
     if not cached_article:
-        if featured and normalize_slug(featured.get('title', '')).startswith(slug[:20]):
+        if featured and featured.get('slug', '').startswith(slug[:20]):
             cached_article = featured
         else:
-            cached_article = next((a for a in articles if normalize_slug(a['title']).startswith(slug[:20])), None)
+            cached_article = next((a for a in articles if a.get('slug', '').startswith(slug[:20])), None)
 
     if not cached_article:
         return "Article not found", 404
