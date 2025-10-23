@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 # Cache buster - updated timestamp
-ENV REBUILD_TIMESTAMP=2025-10-22-20-00
+ENV REBUILD_TIMESTAMP=2025-10-23-19-30
 
 WORKDIR /app
 
