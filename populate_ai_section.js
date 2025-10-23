@@ -51,13 +51,19 @@ function createAIArticleCard(article, index) {
     card.className = 'article-card';
     card.style.background = 'white';
 
-    // Create slug for article link
-    const slug = article.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .substring(0, 50);
+    // Use slug from data if available, otherwise generate from title
+    let slug = article.slug;
+    if (!slug || slug === 'NO SLUG') {
+        slug = article.title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .substring(0, 50);
+    }
+
+    // Add slug as data attribute
+    card.dataset.slug = slug;
 
     card.innerHTML = `
         <div class="article-image">

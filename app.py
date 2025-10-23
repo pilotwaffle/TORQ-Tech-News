@@ -674,6 +674,11 @@ def serve_ai_js():
     """Serve AI section JavaScript"""
     return send_from_directory('.', 'populate_ai_section.js')
 
+@app.route('/populate_main_articles.js')
+def serve_main_articles_js():
+    """Serve main articles population JavaScript"""
+    return send_from_directory('.', 'populate_main_articles.js')
+
 @app.route('/data_cache.json')
 def serve_data_cache():
     """Serve data cache for client-side rendering"""
