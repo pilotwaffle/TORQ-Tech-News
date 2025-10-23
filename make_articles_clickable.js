@@ -1,70 +1,46 @@
 /**
- * Make articles clickable and link to full content pages
- * Updated to use data-slug attributes from dynamically loaded articles
+ * QUICK FIX: Make article cards clickable using event delegation
+ * This works even when articles are loaded dynamically
+ *
+ * USAGE: Replace the content of make_articles_clickable.js with this code
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Make all article cards clickable
-    const articleCards = document.querySelectorAll('.article-card');
+// Use event delegation on the document body - works for all dynamically added elements
+document.body.addEventListener('click', function(e) {
+    // Find the closest article card
+    const card = e.target.closest('.article-card');
 
-    articleCards.forEach(card => {
-        card.style.cursor = 'pointer';
+    // If we clicked inside an article card
+    if (card) {
+        // Don't navigate if clicking on an actual link
+        if (e.target.closest('a')) {
+            return;
+        }
 
-        card.addEventListener('click', function(e) {
-            // Don't navigate if clicking on a link
-            if (e.target.tagName === 'A') return;
+        // Get the slug from data attribute
+        const slug = card.dataset.slug;
 
-            // Try to get slug from data attribute first (preferred)
-            let slug = card.dataset.slug;
-            
-            // Fallback: generate slug from title if no data-slug attribute
-            if (!slug) {
-                const titleElement = card.querySelector('.article-title');
-                if (titleElement) {
-                    const title = titleElement.textContent.trim();
-                    slug = title
-                        .toLowerCase()
-                        .replace(/[^a-z0-9\s-]/g, '')
-                        .replace(/\s+/g, '-')
-                        .replace(/^-+|-+$/g, '')  // Remove leading/trailing dashes
-                        .substring(0, 50);
-                }
+        // Fallback: If no slug in data attribute, generate from title
+        if (!slug || slug === 'NO SLUG') {
+            const titleElement = card.querySelector('.article-title');
+            if (titleElement) {
+                const title = titleElement.textContent.trim();
+                const generatedSlug = title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                    .substring(0, 50);
+
+                console.log('Using generated slug:', generatedSlug);
+                window.location.href = `/article/${generatedSlug}`;
             }
-
-            if (slug) {
-                // Navigate to article page
-                window.location.href = `/article/${slug}`;
-            }
-        });
-    });
-
-    // Make hero/featured article clickable
-    const heroButton = document.querySelector('.hero .btn-large');
-    if (heroButton) {
-        heroButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Try to get slug from hero section data attribute
-            const heroSection = document.querySelector('.hero');
-            let slug = heroSection?.dataset.slug;
-            
-            // Fallback: generate from title
-            if (!slug) {
-                const titleElement = document.querySelector('.hero-title');
-                if (titleElement) {
-                    const title = titleElement.textContent.trim();
-                    slug = title
-                        .toLowerCase()
-                        .replace(/[^a-z0-9\s-]/g, '')
-                        .replace(/\s+/g, '-')
-                        .replace(/^-+|-+$/g, '')  // Remove leading/trailing dashes
-                        .substring(0, 50);
-                }
-            }
-
-            if (slug) {
-                window.location.href = `/article/${slug}`;
-            }
-        });
+        } else {
+            // Use the slug from data attribute
+            console.log('Navigating to:', `/article/${slug}`);
+            window.location.href = `/article/${slug}`;
+        }
     }
 });
+
+console.log('✅ Article click handler using event delegation installed');
