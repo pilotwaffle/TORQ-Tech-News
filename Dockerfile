@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
-# Cache buster - force rebuild
-ENV REBUILD_TIMESTAMP=2025-10-22-19-50
+# Cache buster - updated timestamp
+ENV REBUILD_TIMESTAMP=2025-10-22-20-00
 
 WORKDIR /app
 
@@ -18,8 +18,5 @@ COPY . .
 ENV FLASK_APP=app.py
 ENV PYTHONUNBUFFERED=1
 
-# Make startup script executable
-RUN chmod +x railway_start.py
-
-# Use Python script that forces Gunicorn execution
-CMD ["python", "railway_start.py"]
+# Run Gunicorn directly (no wrapper scripts)
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--threads", "2", "--worker-class", "gevent", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
