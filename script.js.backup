@@ -1,6 +1,6 @@
 /**
- * TORQ Tech News - JavaScript
- * Interactive functionality with real newsletter subscription
+ * MIT Sloan Management Review - JavaScript
+ * Interactive functionality for the landing page
  */
 
 // Wait for DOM to be fully loaded
@@ -46,7 +46,7 @@ function initMobileMenu() {
 }
 
 /**
- * Newsletter Form Handling with Real API Integration
+ * Newsletter Form Handling
  */
 function initNewsletterForm() {
     const form = document.getElementById('newsletterForm');
@@ -74,46 +74,19 @@ function initNewsletterForm() {
         const originalText = submitButton.textContent;
         submitButton.textContent = 'Subscribing...';
 
-        // Call real API endpoint
-        fetch('/api/subscribe', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email: email })
-        })
-        .then(response => {
-            if (!response.ok) {
-                // Handle HTTP errors
-                return response.json().then(data => {
-                    throw new Error(data.error || 'Subscription failed');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
+        // Simulate API call (replace with actual API endpoint)
+        setTimeout(function() {
             // Success
-            if (data.success) {
-                showMessage(data.message || 'Thank you for subscribing!', 'success');
-                emailInput.value = '';
+            showMessage('Thank you for subscribing! Check your inbox for confirmation.', 'success');
+            emailInput.value = '';
 
-                // Track subscription (analytics)
-                trackEvent('Newsletter', 'Subscribe', email);
-            } else {
-                // API returned success: false
-                showMessage(data.error || 'Subscription failed', 'error');
-            }
-        })
-        .catch(error => {
-            // Network or other errors
-            console.error('Subscription error:', error);
-            showMessage(error.message || 'Failed to subscribe. Please try again later.', 'error');
-        })
-        .finally(() => {
-            // Reset button state
+            // Reset button
             submitButton.disabled = false;
             submitButton.textContent = originalText;
-        });
+
+            // Track subscription (analytics)
+            trackEvent('Newsletter', 'Subscribe', email);
+        }, 1500);
     });
 }
 
@@ -137,27 +110,6 @@ function showMessage(message, type = 'success') {
     const messageEl = document.createElement('div');
     messageEl.className = type === 'success' ? 'success-message' : 'error-message';
     messageEl.textContent = message;
-
-    // Add styles for message
-    messageEl.style.position = 'fixed';
-    messageEl.style.top = '20px';
-    messageEl.style.right = '20px';
-    messageEl.style.padding = '1rem 1.5rem';
-    messageEl.style.borderRadius = '8px';
-    messageEl.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-    messageEl.style.zIndex = '10000';
-    messageEl.style.maxWidth = '400px';
-    messageEl.style.fontSize = '1rem';
-    messageEl.style.fontWeight = '500';
-    messageEl.style.transition = 'opacity 0.3s ease';
-
-    if (type === 'success') {
-        messageEl.style.backgroundColor = '#10b981';
-        messageEl.style.color = 'white';
-    } else {
-        messageEl.style.backgroundColor = '#ef4444';
-        messageEl.style.color = 'white';
-    }
 
     // Add to page
     document.body.appendChild(messageEl);
@@ -231,6 +183,7 @@ function initScrollAnimations() {
 
 /**
  * Analytics Event Tracking
+ * Replace with your actual analytics implementation (Google Analytics, etc.)
  */
 function trackEvent(category, action, label) {
     if (typeof gtag !== 'undefined') {
@@ -300,4 +253,4 @@ window.addEventListener('load', function() {
     document.body.classList.add('loaded');
 });
 
-console.log('TORQ Tech News - Landing Page Loaded');
+console.log('MIT Sloan Management Review - Landing Page Loaded');

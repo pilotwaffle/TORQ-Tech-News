@@ -228,6 +228,17 @@ init_db()
 migrate_db()
 init_data_cache()
 
+# Register newsletter subscription routes
+try:
+    from subscription_routes import register_subscription_routes
+    register_subscription_routes(app)
+    print("[INFO] Newsletter subscription routes registered")
+except ImportError as e:
+    print(f"[WARNING] Failed to load subscription routes: {e}")
+    print(f"[WARNING] Make sure subscription_routes.py exists in the project directory")
+except Exception as e:
+    print(f"[ERROR] Error registering subscription routes: {e}")
+
 # Content generator for full articles
 class ContentGenerator:
     """Generates full article content"""

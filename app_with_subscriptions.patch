@@ -1,0 +1,11 @@
+# After line 229 (after init_data_cache()), add these lines:
+
+# Register newsletter subscription routes
+try:
+    from subscription_routes import register_subscription_routes
+    register_subscription_routes(app)
+    print("[INFO] Newsletter subscription routes registered")
+except ImportError as e:
+    print(f"[WARNING] Failed to load subscription routes: {e}")
+except Exception as e:
+    print(f"[ERROR] Error registering subscription routes: {e}")
