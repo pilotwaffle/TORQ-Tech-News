@@ -1,0 +1,78 @@
+name: Test and Deploy to Railway
+
+# Triggers: push to main branch or manual trigger
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test-and-lint:
+    name: Test and Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          # Stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,__pycache__,venv,.venv,node_modules
+          # Treat all errors as warnings for now (to not block deployment)
+          flake8 . --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics --exclude=.git,__pycache__,venv,.venv,node_modules
+
+      - name: Security check - scan for secrets
+        run: |
+          # Basic secret scanning
+          ! grep -r "sk-[a-zA-Z0-9]\{48\}" . --exclude-dir=.git --exclude-dir=node_modules || (echo "Found potential API key!" && exit 1)
+          echo "No obvious secrets detected"
+
+      - name: Run basic tests
+        run: |
+          # Test that app imports correctly
+          python -c "import app; print('✓ App imports successfully')"
+          # Test multi_source_aggregator imports
+          python -c "import multi_source_aggregator; print('✓ Aggregator imports successfully')"
+          # Test database initialization
+          python -c "from app import init_db; init_db(); print('✓ Database initializes correctly')"
+
+  deploy:
+    name: Deploy to Railway
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          # Install Railway CLI
+          curl -fsSL https://railway.app/install.sh | sh
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service ${{ secrets.RAILWAY_SERVICE_ID || 'torq-tech-news' }}
+        continue-on-error: true
+
+      - name: Deployment status
+        run: |
+          echo "🚀 Deployment initiated to Railway"
+          echo "Check Railway dashboard for deployment status"
