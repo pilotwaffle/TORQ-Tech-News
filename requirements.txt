@@ -8,3 +8,5 @@ lxml_html_clean
 gunicorn==21.2.0
 gevent==24.2.1
 azure-data-tables==12.4.4
+flake8==7.0.0
+pytest==7.4.3
