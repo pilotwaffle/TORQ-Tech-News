@@ -40,3 +40,10 @@ desktop.ini
 
 # Cache
 # data_cache.json - Commented out so Railway has initial data
+
+# Test files
+test_analytics.db
+test_report.json
+*_report.json
+demonstration_output.txt
+demo_full_output.txt
