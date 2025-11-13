@@ -228,6 +228,17 @@ init_db()
 migrate_db()
 init_data_cache()
 
+# Register newsletter subscription routes
+try:
+    from subscription_routes import register_subscription_routes
+    register_subscription_routes(app)
+    print("[INFO] Newsletter subscription routes registered")
+except ImportError as e:
+    print(f"[WARNING] Failed to load subscription routes: {e}")
+    print(f"[WARNING] Make sure subscription_routes.py exists in the project directory")
+except Exception as e:
+    print(f"[ERROR] Error registering subscription routes: {e}")
+
 # Content generator for full articles
 class ContentGenerator:
     """Generates full article content"""
@@ -674,6 +685,11 @@ def serve_ai_js():
     """Serve AI section JavaScript"""
     return send_from_directory('.', 'populate_ai_section.js')
 
+@app.route('/populate_main_articles.js')
+def serve_main_articles_js():
+    """Serve main articles population JavaScript"""
+    return send_from_directory('.', 'populate_main_articles.js')
+
 @app.route('/data_cache.json')
 def serve_data_cache():
     """Serve data cache for client-side rendering"""
@@ -683,6 +699,54 @@ def serve_data_cache():
 def serve_logo():
     """Serve TORQ logo"""
     return send_from_directory(DB_DIR, 'torq-logo.svg')
+
+
+@app.route('/topics/<topic>')
+def topic_page(topic):
+    """Display articles filtered by topic/category"""
+    session_id = track_visitor(f'/topics/{topic}')
+
+    # Load articles from cache
+    try:
+        with open(DATA_CACHE_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            all_articles = data.get('articles', [])
+    except Exception as e:
+        print(f"[ERROR] Failed to load cache: {e}")
+        all_articles = []
+
+    # Topic mapping
+    topic_map = {
+        'innovation': 'Innovation',
+        'leadership': 'Leadership',
+        'strategy': 'Strategy',
+        'sustainability': 'Sustainability',
+        'technology': 'Technology',
+        'operations': 'Operations'
+    }
+
+    display_topic = topic_map.get(topic.lower(), topic.title())
+
+    # Filter articles by category
+    filtered_articles = [
+        a for a in all_articles
+        if display_topic.lower() in a.get('category', '').lower()
+    ]
+
+    # Fallback: if no exact category match, search in title/excerpt
+    if not filtered_articles:
+        filtered_articles = [
+            a for a in all_articles
+            if (display_topic.lower() in a.get('title', '').lower() or
+                display_topic.lower() in a.get('excerpt', '').lower())
+        ]
+
+    return render_template('topic.html',
+                         topic=display_topic,
+                         articles=filtered_articles,
+                         count=len(filtered_articles),
+                         session_id=session_id)
+
 
 @app.route('/article/<slug>')
 def article_detail(slug):
@@ -704,18 +768,18 @@ def article_detail(slug):
         featured = {}
 
     # Check featured article first
-    if featured and normalize_slug(featured.get('title', '')) == slug:
+    if featured and featured.get('slug') == slug:
         cached_article = featured
     else:
         # Find matching article in regular articles using normalized slug
-        cached_article = next((a for a in articles if normalize_slug(a['title']) == slug), None)
+        cached_article = next((a for a in articles if a.get('slug') == slug), None)
 
     # If still not found, try fuzzy matching
     if not cached_article:
-        if featured and normalize_slug(featured.get('title', '')).startswith(slug[:20]):
+        if featured and featured.get('slug', '').startswith(slug[:20]):
             cached_article = featured
         else:
-            cached_article = next((a for a in articles if normalize_slug(a['title']).startswith(slug[:20])), None)
+            cached_article = next((a for a in articles if a.get('slug', '').startswith(slug[:20])), None)
 
     if not cached_article:
         return "Article not found", 404
@@ -1212,13 +1276,16 @@ if __name__ == '__main__':
     # Start background automation
     start_background_automation()
 
+    
+    port = int(os.environ.get('PORT', 5000))
+    
     print()
     print("="*60)
-    print("[SUCCESS] Server starting on http://localhost:5000")
-    print("[INFO] Admin Dashboard: http://localhost:5000/admin")
-    print("[INFO] API Analytics: http://localhost:5000/api/analytics")
-    print("[INFO] Advanced Analytics: http://localhost:5000/api/analytics/advanced")
+    print(f"[SUCCESS] Server starting on http://localhost:{port}")
+    print(f"[INFO] Admin Dashboard: http://localhost:{port}/admin")
+    print(f"[INFO] API Analytics: http://localhost:{port}/api/analytics")
+    print(f"[INFO] Advanced Analytics: http://localhost:{port}/api/analytics/advanced")
     print("="*60)
     print()
-
-    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)

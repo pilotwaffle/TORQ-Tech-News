@@ -1,0 +1,19 @@
+# =============================================================================
+# ADD THIS CODE TO app.py
+# Location: After line 229 (after init_data_cache())
+# =============================================================================
+
+# Register newsletter subscription routes
+try:
+    from subscription_routes import register_subscription_routes
+    register_subscription_routes(app)
+    print("[INFO] Newsletter subscription routes registered")
+except ImportError as e:
+    print(f"[WARNING] Failed to load subscription routes: {e}")
+    print(f"[WARNING] Make sure subscription_routes.py exists in the project directory")
+except Exception as e:
+    print(f"[ERROR] Error registering subscription routes: {e}")
+
+# =============================================================================
+# END OF CODE TO ADD
+# =============================================================================

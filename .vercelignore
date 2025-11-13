@@ -1,0 +1,17 @@
+analytics.db
+*.pyc
+__pycache__/
+.env
+.git/
+venv/
+env/
+automation_agent.py
+enhanced_scraper.py
+multi_source_aggregator.py
+fix_*.py
+add_*.py
+update_*.py
+test_*.py
+railway_start.py
+Dockerfile
+railway.json

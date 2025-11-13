@@ -1,0 +1,27 @@
+--- a/multi_source_aggregator.py
++++ b/multi_source_aggregator.py
+@@ -246,6 +246,15 @@ class MultiSourceAggregator:
+                     if link.startswith('/'):
+                         link = "https://sloanreview.mit.edu" + link
+ 
++                    # Extract slug from MIT Sloan URL
++                    slug = link.split('/article/')[-1].rstrip('/')
++                    if not slug or slug == link:
++                        # Fallback: generate slug from title
++                        slug = title.lower()
++                        slug = slug.replace('&', 'and')
++                        slug = ''.join(c if c.isalnum() or c in ' -' else '' for c in slug)
++                        slug = '-'.join(slug.split())
++                        slug = slug[:50]
++
+                     articles.append({
+                         'title': title[:100],
+                         'excerpt': "Business strategy insights from MIT Sloan School of Management",
+@@ -255,6 +264,7 @@ class MultiSourceAggregator:
+                         'date': datetime.now().strftime("%B %d, %Y"),
+                         'reading_time': random.randint(7, 12),
+                         'link': link,
++                        'slug': slug,
+                         'source': 'MIT Sloan'
+                     })
+                     print(f"  [OK] MIT Sloan: {title[:50]}...")

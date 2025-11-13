@@ -101,6 +101,7 @@ class MultiSourceAggregator:
                         'date': datetime.now().strftime("%B %d, %Y"),
                         'reading_time': random.randint(4, 8),
                         'link': link,
+                        'slug': self._extract_slug(link, title),
                         'source': 'TechCrunch'
                     })
                     print(f"  [OK] TechCrunch: {title[:50]}...")
@@ -158,6 +159,7 @@ class MultiSourceAggregator:
                         'date': datetime.now().strftime("%B %d, %Y"),
                         'reading_time': random.randint(8, 12),
                         'link': link,
+                        'slug': self._extract_slug(link, title),
                         'source': 'MIT Tech Review'
                     })
                     print(f"  [OK] MIT Tech Review: {title[:50]}...")
@@ -204,6 +206,7 @@ class MultiSourceAggregator:
                             'date': datetime.now().strftime("%B %d, %Y"),
                             'reading_time': random.randint(5, 10),
                             'link': url,
+                            'slug': self._extract_slug(url, title),
                             'source': 'Hacker News'
                         })
                         print(f"  [OK] Hacker News: {title[:50]}...")
@@ -255,6 +258,7 @@ class MultiSourceAggregator:
                         'date': datetime.now().strftime("%B %d, %Y"),
                         'reading_time': random.randint(7, 12),
                         'link': link,
+                        'slug': self._extract_slug(link, title),
                         'source': 'MIT Sloan'
                     })
                     print(f"  [OK] MIT Sloan: {title[:50]}...")
@@ -276,6 +280,35 @@ class MultiSourceAggregator:
         ]
         selected = random.choice(unsplash_ids)
         return f"https://images.unsplash.com/{selected}?w=800&h=600&fit=crop"
+
+
+    def _extract_slug(self, url: str, title: str = "") -> str:
+        """Extract slug from URL or generate from title"""
+        import re
+
+        # Try to extract from MIT Sloan URL
+        if "sloanreview.mit.edu/article/" in url:
+            match = re.search(r'/article/([^/]+)/?', url)
+            if match:
+                return match.group(1)
+
+        # Try to extract from other URL patterns
+        if "hackernews" in url or "ycombinator" in url:
+            # For HN, use the ID
+            match = re.search(r'id=(\d+)', url)
+            if match:
+                return f"hn-{match.group(1)}"
+
+        # Fallback: generate from title
+        if title:
+            slug = title.lower()
+            slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+            slug = re.sub(r'\s+', '-', slug)
+            slug = re.sub(r'^-+|-+$', '', slug)
+            return slug[:50]
+
+        return "article"
+
 
     def extract_article_content(self, url: str) -> Dict[str, str]:
         """
@@ -340,6 +373,7 @@ class MultiSourceAggregator:
             'date': datetime.now().strftime("%B %d, %Y"),
             'reading_time': random.randint(4, 7),
             'link': "https://techcrunch.com",
+            'slug': self._extract_slug("https://techcrunch.com", titles[i % len(titles)]),
             'source': 'TechCrunch'
         } for i in range(count)]
 
@@ -358,6 +392,7 @@ class MultiSourceAggregator:
             'date': datetime.now().strftime("%B %d, %Y"),
             'reading_time': random.randint(10, 15),
             'link': "https://www.technologyreview.com",
+            'slug': self._extract_slug("https://www.technologyreview.com", titles[i % len(titles)]),
             'source': 'MIT Tech Review'
         } for i in range(count)]
 
@@ -376,6 +411,7 @@ class MultiSourceAggregator:
             'date': datetime.now().strftime("%B %d, %Y"),
             'reading_time': random.randint(3, 8),
             'link': "https://news.ycombinator.com",
+            'slug': self._extract_slug("https://news.ycombinator.com", titles[i % len(titles)]),
             'source': 'Hacker News'
         } for i in range(count)]
 
@@ -406,7 +442,7 @@ class MultiSourceAggregator:
         time.sleep(1)
         all_articles.extend(hackernews)
 
-        mit_sloan = self.fetch_mit_sloan_articles(1)
+        mit_sloan = self.fetch_mit_sloan_articles(6)
         all_articles.extend(mit_sloan)
 
         # Extract full article content if requested
@@ -452,6 +488,10 @@ class MultiSourceAggregator:
         featured = all_articles[0] if all_articles else self._get_default_featured()
         featured['author_title'] = "Tech Analyst"
 
+        # Ensure featured has slug
+        if 'slug' not in featured or not featured['slug']:
+            featured['slug'] = self._extract_slug(featured.get('link', ''), featured.get('title', ''))
+
         # AI/ML specific articles
         ai_articles = [a for a in all_articles if "AI" in a['category'] or "Machine" in a['title']][:3]
         if len(ai_articles) < 3:
@@ -488,7 +528,8 @@ class MultiSourceAggregator:
             'author_title': "Editorial Team",
             'date': datetime.now().strftime("%B %d, %Y"),
             'reading_time': 10,
-            'link': "#"
+            'link': "#",
+            'slug': "the-future-of-ai-in-enterprise-technology"
         }
 
     def save_cache(self, data: Dict):
