@@ -2,24 +2,22 @@
 
 This repo holds two separate things. Do not mix them.
 
-1. **A live production web app** at the repository root (Flask + static site,
-   deployed via Vercel / Railway / GitHub Actions).
+1. **A live production web app** at the root (Flask + static, deployed via
+   Vercel / Railway / GitHub Actions).
 2. **A knowledge base layer** in `raw/` and `wiki/`.
 
 ---
 
 ## Knowledge base rules (binding, every session)
 
-### `raw/` — original assets, immutable
+### `raw/` — original assets, add-only
 
-- **Never edit, reformat, rename, move, reorganize, or delete anything in `raw/`.**
-  This holds regardless of how messy, duplicated, or badly named it looks.
-- Read from `raw/` freely. Write to it only when the user explicitly asks to add
-  a specific file.
-- Do not "clean up" `raw/`. Do not propose restructuring it. Do not create
-  subfolders in it uninvited.
+- **Adding new files is allowed. Existing files are immutable.**
+- **Never edit, reformat, rename, move, reorganize, or delete anything already in
+  `raw/`** — however messy, duplicated, or badly named it looks. Add-only is not
+  permission to tidy. Do not propose restructuring it.
 - Why: `wiki/` is regenerated destructively. That is only safe when the layer
-  beneath it never drifts. `raw/` is the immutable ground truth.
+  beneath it never drifts. `raw/` is the ground truth.
 
 ### `wiki/` — AI-written, never hand-edited
 
@@ -34,8 +32,15 @@ This repo holds two separate things. Do not mix them.
   the purpose is unclear, list it under Gaps rather than guessing.
 - On "regenerate the wiki": re-scan `raw/`, rewrite `wiki/INDEX.md`, drop stale
   entries. Do not touch `raw/` in the process.
-- If the user hand-edits `wiki/`, tell them it will be lost on regeneration and
-  offer to move the content to `raw/` instead.
+
+### Automation
+
+- A global `SessionStart` hook (`~/.claude/hooks/kb-scan.py`) reports which
+  `raw/` assets are not yet referenced by `wiki/`. It is read-only.
+- When it reports unindexed assets, **tell the user and offer to regenerate**.
+  Never regenerate `wiki/` unprompted.
+- To capture files: `python ~/.claude/hooks/kb-capture.py <paths> [--into SUBDIR]`.
+  Use `--dry-run` first when capturing a directory.
 
 ---
 
@@ -43,11 +48,9 @@ This repo holds two separate things. Do not mix them.
 
 - All app code, assets, and deploy config stay at the repository root. Do **not**
   move them into `raw/`, `wiki/`, or any new folder.
-- `vercel.json`, `Procfile`, `railway.json`, `railway.toml`, `Dockerfile`,
-  `start.sh`, and `.github/workflows/` resolve paths from the repo root.
-  Moving or renaming root files breaks production deploys.
-- Never route app code through the knowledge base, or knowledge base files into
-  the deploy path.
+- `vercel.json`, `Procfile`, `railway.*`, `Dockerfile`, `start.sh`, and
+  `.github/workflows/` resolve paths from the repo root. Moving or renaming root
+  files breaks production deploys.
 
 ---
 
